@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Priority } from '@prisma/client';
-import { useFormStatus } from 'next/navigation';
+import { useFormStatus } from 'react-dom';
 import { createTaskWithForm } from '@/actions/task';
 
 const priorityOptions: Priority[] = ['P1', 'P2', 'P3', 'P4'];
@@ -15,7 +15,8 @@ type AlertVariant = 'info' | 'success' | 'error';
 type AlertState = { message: string; variant: AlertVariant } | null;
 
 export default function TaskCreator({ projectId }: TaskCreatorProps) {
-  const { pending } = typeof useFormStatus === 'function' ? useFormStatus() : { pending: false };
+  const formStatus = useFormStatus();
+  const pending = formStatus?.pending ?? false;
   const [alert, setAlert] = useState<AlertState>(null);
   const prevPending = useRef(pending);
 

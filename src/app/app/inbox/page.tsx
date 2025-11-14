@@ -4,7 +4,7 @@ import TaskCard from '../../../components/TaskCard';
 import { createTask } from '../../../actions/task';
 import prisma from '../../../lib/db';
 import { authOptions } from '../../../lib/auth';
-import { getServerSession } from 'next-auth/server';
+import { getServerSession } from 'next-auth';
 import { Priority } from '@prisma/client';
 
 async function fetchTasks() {

@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="de">
+    <html lang="de" className="fusion-extension-loaded">
       <body className="bg-slate-950 text-white">{children}</body>
     </html>
   );
