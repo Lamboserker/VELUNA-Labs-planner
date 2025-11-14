@@ -1,0 +1,293 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EnergyProfile {
+  LOW
+  HIGH
+  MIXED
+}
+
+enum Priority {
+  P1
+  P2
+  P3
+  P4
+}
+
+enum TaskStatus {
+  INBOX
+  ACTIVE
+  SCHEDULED
+  DONE
+  BLOCKED
+  DEFERRED
+}
+
+enum ThreadRole {
+  OWNER
+  CONTRACTOR
+  VIEWER
+}
+
+enum CalendarBlockType {
+  MEETING
+  FOCUS
+  BREAK
+  ADMIN
+  BUFFER
+}
+
+enum AllocationSource {
+  PLANNER
+  MANUAL
+  IMPORT
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  name               String?
+  image              String?
+  emailVerified      DateTime?
+  tz                 String              @default("Europe/Berlin")
+  energyProfile      EnergyProfile       @default(MIXED)
+  tasks              Task[]
+  projects           Project[]
+  areas              Area[]
+  notes              Note[]
+  notifications      Notification[]
+  calendarBlocks     CalendarBlock[]
+  attachments        Attachment[]
+  messages           Message[]
+  threadParticipants ThreadParticipant[]
+  messageReads       MessageRead[]
+  tags               Tag[]
+  accounts           Account[]
+  sessions           Session[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  @map("refresh_token")
+  access_token       String?  @map("access_token")
+  expires_at         Int?     @map("expires_at")
+  token_type         String?  @map("token_type")
+  scope              String?
+  id_token           String?  @map("id_token")
+  session_state      String?  @map("session_state")
+  oauth_token_secret String?  @map("oauth_token_secret")
+  oauth_token        String?  @map("oauth_token")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Area {
+  id        String    @id @default(cuid())
+  userId    String
+  name      String
+  color     String?
+  user      User      @relation(fields: [userId], references: [id])
+  projects  Project[]
+}
+
+model Project {
+  id        String    @id @default(cuid())
+  userId    String
+  areaId    String?
+  name      String
+  goal      String?
+  wip       Boolean   @default(true)
+  dueAt     DateTime?
+  user      User      @relation(fields: [userId], references: [id])
+  area      Area?     @relation(fields: [areaId], references: [id])
+  tasks     Task[]
+  threads   Thread[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Task {
+  id          String        @id @default(cuid())
+  userId      String
+  projectId   String?
+  title       String
+  notes       String?
+  status      TaskStatus    @default(INBOX)
+  priority    Priority      @default(P3)
+  estimateMin Int           @default(25)
+  energy      Int           @default(2)
+  dueAt       DateTime?
+  dueStart    DateTime?
+  hardDeadline Boolean      @default(false)
+  score       Float         @default(0)
+  blockedBy   String[]      @default([])
+  recurring   Recurrence?
+  tags        TagOnTask[]
+  allocations Allocation[]
+  notesEntries Note[]       @relation("TaskNotes")
+  threads     Thread[]
+  attachments Attachment[]
+  project     Project?      @relation(fields: [projectId], references: [id])
+  user        User          @relation(fields: [userId], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Recurrence {
+  id     String @id @default(cuid())
+  taskId String @unique
+  rule   String
+  task   Task   @relation(fields: [taskId], references: [id])
+}
+
+model Tag {
+  id     String      @id @default(cuid())
+  name   String
+  userId String
+  user   User        @relation(fields: [userId], references: [id])
+  tasks  TagOnTask[]
+}
+
+model TagOnTask {
+  taskId String
+  tagId  String
+  task   Task @relation(fields: [taskId], references: [id])
+  tag    Tag  @relation(fields: [tagId], references: [id])
+
+  @@id([taskId, tagId])
+}
+
+model Allocation {
+  id        String           @id @default(cuid())
+  taskId    String
+  start     DateTime
+  end       DateTime
+  source    AllocationSource
+  task      Task             @relation(fields: [taskId], references: [id])
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+
+model CalendarBlock {
+  id        String            @id @default(cuid())
+  userId    String
+  start     DateTime
+  end       DateTime
+  type      CalendarBlockType
+  extId     String?
+  user      User              @relation(fields: [userId], references: [id])
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+model Note {
+  id        String      @id @default(cuid())
+  taskId    String
+  userId    String
+  title     String?
+  contentMd String
+  task      Task        @relation("TaskNotes", fields: [taskId], references: [id])
+  user      User        @relation(fields: [userId], references: [id])
+  attachments Attachment[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model Attachment {
+  id         String   @id @default(cuid())
+  noteId     String?
+  taskId     String?
+  userId     String
+  name       String
+  url        String
+  sizeBytes  Int
+  mime       String
+  note       Note?    @relation(fields: [noteId], references: [id])
+  task       Task?    @relation(fields: [taskId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model Thread {
+  id          String              @id @default(cuid())
+  projectId   String?
+  taskId      String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  project     Project?            @relation(fields: [projectId], references: [id])
+  task        Task?               @relation(fields: [taskId], references: [id])
+  messages    Message[]
+  participants ThreadParticipant[]
+}
+
+model Message {
+  id        String        @id @default(cuid())
+  threadId  String
+  authorId  String
+  bodyMd    String
+  createdAt DateTime      @default(now())
+  thread    Thread        @relation(fields: [threadId], references: [id])
+  author    User          @relation(fields: [authorId], references: [id])
+  readBy    MessageRead[]
+}
+
+model ThreadParticipant {
+  threadId String
+  userId   String
+  role     ThreadRole
+  thread   Thread @relation(fields: [threadId], references: [id])
+  user     User   @relation(fields: [userId], references: [id])
+
+  @@id([threadId, userId])
+}
+
+model MessageRead {
+  messageId String
+  userId    String
+  readAt    DateTime @default(now())
+  message   Message  @relation(fields: [messageId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@id([messageId, userId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  ref       String
+  createdAt DateTime @default(now())
+  readAt    DateTime?
+  user      User     @relation(fields: [userId], references: [id])
+}
