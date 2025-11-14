@@ -11,13 +11,13 @@ export default function MarketingPage() {
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 px-6 py-12 text-white">
       <div className="mx-auto grid max-w-6xl gap-10">
         <section className="rounded-2xl bg-gradient-to-br from-slate-900/60 via-indigo-900/70 to-purple-900/80 p-10 shadow-[0_25px_60px_rgba(15,23,42,0.7)]">
-          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-cyan-300">Persoenlicher Planer</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-cyan-300">Persönlicher Planer</p>
           <h1 className="mt-4 text-4xl font-semibold leading-tight text-white sm:text-5xl">
-            Eine zentrale Buehne fuer Aufgaben, Projekte und Analysen.
+            Eine zentrale Bühne für Aufgaben, Projekte und Analysen.
           </h1>
           <p className="mt-4 max-w-3xl text-lg text-slate-300">
-            Ueberwachung in Echtzeit, Fokus-Impulse und die beruhigende Klarheit, dass nichts untergeht. Behalte
-            Prioritaeten, Energie und Deadlines mit einem Blick.
+            Überwachung in Echtzeit, Fokus-Impulse und die beruhigende Klarheit, dass nichts untergeht. Behalte
+            Prioritäten, Energie und Deadlines mit einem Blick.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
@@ -63,7 +63,7 @@ export default function MarketingPage() {
               </li>
               <li className="flex items-start gap-3">
                 <span className="mt-1 h-2 w-2 rounded-full bg-cyan-400" />
-                Richte Prioritaeten nach Energie, Fokus und Impact
+                Richte Prioritäten nach Energie, Fokus und Impact
               </li>
             </ul>
           </div>

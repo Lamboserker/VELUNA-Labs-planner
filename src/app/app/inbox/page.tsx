@@ -43,7 +43,7 @@ export default async function InboxPage() {
     <section className="space-y-8">
       <div className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
         <CaptureBar action={handleCreateTask} />
-        <PomodoroDock activeTask="Inbox aufraeumen & Tag planen" remaining={22} cycle={2} />
+        <PomodoroDock activeTask="Inbox aufräumen & Tag planen" remaining={22} cycle={2} />
       </div>
 
       <div className="space-y-6">

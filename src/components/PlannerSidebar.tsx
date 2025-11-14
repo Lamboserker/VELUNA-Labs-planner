@@ -24,7 +24,7 @@ export default function PlannerSidebar({
           </div>
           <div>
             <p className="text-2xl font-bold text-white">{capacityHours}h</p>
-            <p className="text-[0.65rem] uppercase tracking-[0.3em] text-slate-400">Kapazitaet</p>
+            <p className="text-[0.65rem] uppercase tracking-[0.3em] text-slate-400">Kapazität</p>
           </div>
         </div>
         <div className="mt-4 h-1.5 w-full rounded-full bg-slate-800">

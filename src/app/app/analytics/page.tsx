@@ -36,7 +36,7 @@ export default async function AnalyticsPage() {
     { label: 'OFFENE AUFGABEN', value: `${counts.INBOX ?? 0}`, sub: `${counts.ACTIVE ?? 0} geplant · ${counts.BLOCKED ?? 0} blockiert` },
     { label: 'IN ARBEIT', value: `${counts.ACTIVE ?? 0}`, sub: '0 im Test' },
     { label: 'DEADLINE HEUTE', value: `${counts.SCHEDULED ?? 0}`, sub: 'Kein Druck' },
-    { label: 'UEBERFAELLIG', value: `${counts.BLOCKED ?? 0}`, sub: 'Alles unter Kontrolle' },
+    { label: 'UEBERFÄLLIG', value: `${counts.BLOCKED ?? 0}`, sub: 'Alles unter Kontrolle' },
   ];
 
   const bars = [
@@ -54,9 +54,9 @@ export default async function AnalyticsPage() {
     <section className="space-y-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Produktivitaetsdashboard</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Produktivitätsdashboard</p>
           <h1 className="text-3xl font-semibold text-white">Analysen</h1>
-          <p className="text-sm text-slate-400">Ein schneller Ueberblick ueber Fortschritt, Engpaesse und Deadlines.</p>
+          <p className="text-sm text-slate-400">Ein schneller Überblick über Fortschritt, Engpässe und Deadlines.</p>
         </div>
         <div className="rounded-full border border-slate-800 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-200">
           Live

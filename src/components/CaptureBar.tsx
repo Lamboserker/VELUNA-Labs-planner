@@ -15,7 +15,7 @@ export default function CaptureBar({ action }: CaptureBarProps) {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <label className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Prioritaet</label>
+          <label className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Priorität</label>
           <select name="priority" className="w-32 rounded-2xl border border-slate-800 bg-slate-950 px-3 py-3 text-sm text-white">
             <option value="P1">P1</option>
             <option value="P2">P2</option>

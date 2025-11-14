@@ -101,7 +101,7 @@ export default async function PlanPage() {
             <span className="rounded-full bg-slate-800/60 px-3 py-1 text-cyan-300">8 geplant</span>
             <span className="rounded-full bg-slate-800/60 px-3 py-1 text-amber-300">0 blockiert</span>
             <span className="rounded-full bg-slate-800/60 px-3 py-1 text-rose-300">
-              {statusCounts.BLOCKED ?? 0} ueberfaellig
+              {statusCounts.BLOCKED ?? 0} ueberfällig
             </span>
             <span className="rounded-full bg-slate-800/60 px-3 py-1 text-sky-300">0 Deadlines</span>
           </div>
@@ -124,7 +124,7 @@ export default async function PlanPage() {
         </div>
         <div className="space-y-4">
           <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Naechste Aufgaben</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Nächste Aufgaben</p>
             <div className="mt-4 space-y-4">
               {nextTasks.map((task) => (
                 <TaskCard
@@ -208,11 +208,11 @@ export default async function PlanPage() {
         <div className="space-y-4 rounded-3xl border border-slate-800 bg-slate-900/60 p-6">
           <div className="rounded-2xl border border-slate-800/50 bg-slate-950/40 p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Top 3</p>
-            <p className="mt-2 text-lg font-semibold text-white">Prioritaeten fuer heute</p>
+            <p className="mt-2 text-lg font-semibold text-white">Prioritäten fuer heute</p>
             <p className="text-sm text-slate-400">Review Blocker, Launch-Checklist, Analytics-Einheit.</p>
           </div>
           <div className="rounded-2xl border border-slate-800/50 bg-slate-950/40 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Kapazitaet: 8h</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Kapazität: 8h</p>
             <p className="mt-2 text-sm text-slate-300">Meetings blockiert - 1.5h</p>
             <p className="text-sm text-slate-300">Focus-Fenster - 5h</p>
           </div>

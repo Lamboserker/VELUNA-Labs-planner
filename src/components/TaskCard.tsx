@@ -41,7 +41,7 @@ export default function TaskCard({
         <span className={`rounded-full px-3 py-1 text-[0.55rem] ${statusColor}`}>{status}</span>
         <span className="rounded-full bg-slate-800/60 px-3 py-1 text-[0.55rem] text-white">{estimate}</span>
         <span className="rounded-full bg-slate-800/60 px-3 py-1 text-[0.55rem] text-white">Energie {energy}</span>
-        <span className="rounded-full bg-slate-800/60 px-3 py-1 text-[0.55rem] text-white">Faellig {due}</span>
+        <span className="rounded-full bg-slate-800/60 px-3 py-1 text-[0.55rem] text-white">Fällig {due}</span>
       </div>
       {tags.length ? (
         <div className="mt-4 flex flex-wrap gap-2">

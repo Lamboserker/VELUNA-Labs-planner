@@ -130,14 +130,17 @@ export async function createTaskWithForm(formData: FormData) {
   const priority = (formData.get('priority') as Priority) ?? Priority.P3;
   const estimateMin = Number(formData.get('estimateMin') ?? 30);
   const energy = Number(formData.get('energy') ?? 2);
-  const dueAtValue = formData.get('dueAt')?.toString();
+  const dueAtValue = formData.get('dueAt')?.toString().trim();
   const projectId = formData.get('projectId')?.toString();
+  const dueAtDate = dueAtValue ? new Date(dueAtValue) : undefined;
+  const dueAtIso =
+    dueAtDate && !Number.isNaN(dueAtDate.getTime()) ? dueAtDate.toISOString() : undefined;
   const payload = taskCreateSchema.parse({
     title,
     priority,
     estimateMin: Number.isNaN(estimateMin) ? 30 : Math.max(5, estimateMin),
     energy: Number.isNaN(energy) ? 2 : Math.min(3, Math.max(1, energy)),
-    dueAt: dueAtValue,
+    dueAt: dueAtIso,
     projectId,
     description,
   });

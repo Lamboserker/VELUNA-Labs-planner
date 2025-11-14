@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import { Priority } from '@prisma/client';
 import { useFormStatus } from 'next/navigation';
 import { createTaskWithForm } from '@/actions/task';
@@ -10,8 +11,13 @@ type TaskCreatorProps = {
   projectId: string;
 };
 
+type AlertVariant = 'info' | 'success' | 'error';
+type AlertState = { message: string; variant: AlertVariant } | null;
+
 export default function TaskCreator({ projectId }: TaskCreatorProps) {
   const { pending } = typeof useFormStatus === 'function' ? useFormStatus() : { pending: false };
+  const [alert, setAlert] = useState<AlertState>(null);
+  const prevPending = useRef(pending);
 
   const rangeSteps = [
     { label: 'Low', value: 1 },
@@ -19,11 +25,54 @@ export default function TaskCreator({ projectId }: TaskCreatorProps) {
     { label: 'High', value: 3 },
   ];
 
+  useEffect(() => {
+    if (pending && !prevPending.current) {
+      setAlert({ message: 'Task wird erstellt…', variant: 'info' });
+    } else if (!pending && prevPending.current) {
+      setAlert({ message: 'Task hinzugefügt', variant: 'success' });
+    }
+    prevPending.current = pending;
+  }, [pending]);
+
+  useEffect(() => {
+    if (alert && alert.variant !== 'info') {
+      const timeout = setTimeout(() => setAlert(null), 3000);
+      return () => clearTimeout(timeout);
+    }
+    return undefined;
+  }, [alert]);
+
+  const alertClasses: Record<AlertVariant, string> = {
+    info: 'border-cyan-400/40 bg-slate-900/90 text-cyan-200',
+    success: 'border-emerald-500/50 bg-emerald-900/80 text-emerald-200',
+    error: 'border-rose-500/50 bg-rose-900/80 text-rose-200',
+  };
+
   return (
     <form
       action={createTaskWithForm}
       className="space-y-4 rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-[0_25px_40px_rgba(15,23,42,0.65)]"
     >
+      <div className="space-y-2">
+        {alert && (
+          <div
+            role="status"
+            aria-live="polite"
+            className={`flex items-center justify-center gap-2 rounded-2xl border px-3 py-2 text-xs font-semibold tracking-[0.2em] ${alertClasses[alert.variant]}`}
+          >
+            {alert.variant === 'info' && (
+              <span className="inline-flex h-3 w-3 animate-pulse rounded-full bg-white/80" />
+            )}
+            <span>{alert.message}</span>
+          </div>
+        )}
+        {pending && (
+          <div className="flex items-center justify-center gap-2 rounded-2xl border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-[0.65rem] uppercase tracking-[0.4em] text-cyan-100">
+            <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-cyan-400" />
+            <span>speichere…</span>
+          </div>
+        )}
+      </div>
       <input type="hidden" name="projectId" value={projectId} />
       <div className="space-y-2">
         <label className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Titel</label>
@@ -45,7 +94,7 @@ export default function TaskCreator({ projectId }: TaskCreatorProps) {
       </div>
       <div className="flex flex-wrap gap-4 text-xs uppercase tracking-[0.3em] text-slate-400">
         <label className="flex-1">
-          Prioritaet
+          Priorität
           <select
             name="priority"
             defaultValue="P3"
@@ -88,7 +137,7 @@ export default function TaskCreator({ projectId }: TaskCreatorProps) {
       </div>
       <div className="flex flex-wrap gap-4">
         <label className="flex-1 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-          Faelligkeitsdatum
+          Fälligkeitsdatum
           <input
             type="date"
             name="dueAt"
@@ -113,7 +162,7 @@ export default function TaskCreator({ projectId }: TaskCreatorProps) {
         {pending ? (
           <>
             <span className="inline-flex h-4 w-4 animate-spin rounded-full border border-transparent border-t-[2px] border-white" aria-hidden />
-            <span>Laedt...</span>
+            <span>Lädt...</span>
           </>
         ) : (
           'Task anlegen'
