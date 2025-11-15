@@ -5,8 +5,7 @@ import PomodoroDock from '../../../components/PomodoroDock';
 import { CalendarBlockType, TaskStatus } from '@prisma/client';
 import prisma from '@/lib/db';
 import { replanRange } from '../../../actions/plan';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { ensureCurrentUserRecord } from '@/lib/clerkUser';
 import { redirect } from 'next/navigation';
 
 const formatTime = (date: Date) => date.toISOString().slice(11, 16);
@@ -73,9 +72,10 @@ const formatHours = (minutes: number) => {
 };
 
 export default async function PlanPage() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.email) {
-    redirect('/api/auth/signin?callbackUrl=/app/plan');
+  try {
+    await ensureCurrentUserRecord();
+  } catch {
+    redirect('/auth');
   }
 
   const today = new Date();

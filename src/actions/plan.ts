@@ -1,10 +1,9 @@
 import { z } from 'zod';
-import { getServerSession } from 'next-auth';
 import { CalendarBlock, AllocationSource, TaskStatus } from '@prisma/client';
-import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/db';
 import { planDay as runPlanDay } from '@/lib/planner/engine';
 import { Allocation, PlannerTask, PlanResult } from '@/lib/planner/types';
+import { getCurrentUserId } from '@/lib/clerkUser';
 
 const planSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -22,18 +21,6 @@ const toDateKey = (date: Date) => {
   const day = String(local.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
-
-async function getUserIdFromSession() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.email) {
-    throw new Error('Unauthorized');
-  }
-  const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-  if (!user) {
-    throw new Error('User record not found');
-  }
-  return user.id;
-}
 
 async function getPlannerTasks(userId: string) {
   const tasks = await prisma.task.findMany({
@@ -107,7 +94,7 @@ async function persistAllocations(allocations: Allocation[]) {
 }
 
 export async function planDayAction(input: z.infer<typeof planSchema>) {
-  const userId = await getUserIdFromSession();
+  const userId = await getCurrentUserId();
   const payload = planSchema.parse(input);
   const { plannerTasks, calendarBlocks } = await gatherPlannerData(userId, payload.date);
 
@@ -124,7 +111,7 @@ export async function planDayAction(input: z.infer<typeof planSchema>) {
 
 export async function replanRange(input: z.infer<typeof rangeSchema>) {
   const payload = rangeSchema.parse(input);
-  const userId = await getUserIdFromSession();
+  const userId = await getCurrentUserId();
   const start = new Date(payload.startDate);
   start.setHours(0, 0, 0, 0);
   const end = new Date(payload.endDate);
@@ -187,9 +174,6 @@ export async function replanRange(input: z.infer<typeof rangeSchema>) {
 }
 
 export async function updateCapacity(input: { date: string; hours: number; energy: number }) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.email) {
-    throw new Error('Unauthorized');
-  }
+  await getCurrentUserId();
   return { updated: true, info: input };
 }

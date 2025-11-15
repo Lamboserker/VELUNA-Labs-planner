@@ -1,24 +1,16 @@
 import Link from 'next/link';
 import prisma from '../../../lib/db';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../lib/auth';
+import { ensureCurrentUserRecord } from '../../../lib/clerkUser';
 import NewProjectForm from '../../../components/NewProjectForm';
 
 export default async function ProjectsPage() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.email) {
+  let user;
+  try {
+    user = await ensureCurrentUserRecord();
+  } catch {
     return (
       <section>
         <p className="text-white">Bitte anmelden, um Projekte zu sehen.</p>
-      </section>
-    );
-  }
-
-  const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-  if (!user) {
-    return (
-      <section>
-        <p className="text-white">Benutzer nicht gefunden.</p>
       </section>
     );
   }

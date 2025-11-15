@@ -1,9 +1,8 @@
 import { CalendarBlockType } from '@prisma/client';
-import { getServerSession } from 'next-auth';
 import { z } from 'zod';
-import { authOptions } from '../lib/auth';
 import prisma from '../lib/db';
 import { fetchGoogleCalendarEvents } from '../lib/calendar/google';
+import { ensureCurrentUserRecord } from '../lib/clerkUser';
 
 const importSchema = z.object({
   accessToken: z.string().min(1),
@@ -13,15 +12,7 @@ const importSchema = z.object({
 
 export async function importCalendarRange(input: z.infer<typeof importSchema>) {
   const { accessToken, rangeStart, rangeEnd } = importSchema.parse(input);
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.email) {
-    throw new Error('Unauthorized');
-  }
-
-  const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-  if (!user) {
-    throw new Error('User record not found');
-  }
+  const user = await ensureCurrentUserRecord();
 
   const events = await fetchGoogleCalendarEvents({
     accessToken,

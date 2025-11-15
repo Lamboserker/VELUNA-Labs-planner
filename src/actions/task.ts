@@ -1,10 +1,9 @@
 'use server';
 
 import { Priority, TaskStatus } from '@prisma/client';
-import { getServerSession } from 'next-auth';
 import { z } from 'zod';
-import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/db';
+import { getCurrentUserId } from '@/lib/clerkUser';
 
 const taskCreateSchema = z.object({
   title: z.string().min(3),
@@ -35,18 +34,6 @@ const listSchema = z.object({
 
 const statusSchema = z.nativeEnum(TaskStatus);
 
-async function getUserIdFromSession() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.email) {
-    throw new Error('Unauthorized');
-  }
-  const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-  if (!user) {
-    throw new Error('User record not found');
-  }
-  return user.id;
-}
-
 async function createTaskRecord(payload: z.infer<typeof taskCreateSchema> & { userId: string }) {
   return prisma.task.create({
     data: {
@@ -63,13 +50,13 @@ async function createTaskRecord(payload: z.infer<typeof taskCreateSchema> & { us
 }
 
 export async function createTask(data: z.infer<typeof taskCreateSchema>) {
-  const userId = await getUserIdFromSession();
+  const userId = await getCurrentUserId();
   const payload = taskCreateSchema.parse(data);
   return createTaskRecord({ ...payload, userId });
 }
 
 export async function updateTask(data: z.infer<typeof taskUpdateSchema>) {
-  const userId = await getUserIdFromSession();
+  const userId = await getCurrentUserId();
   const payload = taskUpdateSchema.parse(data);
   await prisma.task.updateMany({
     where: { id: payload.id, userId },
@@ -87,7 +74,7 @@ export async function updateTask(data: z.infer<typeof taskUpdateSchema>) {
 }
 
 export async function completeTask(data: z.infer<typeof taskCompleteSchema>) {
-  const userId = await getUserIdFromSession();
+  const userId = await getCurrentUserId();
   const payload = taskCompleteSchema.parse(data);
   return prisma.task.updateMany({
     where: { id: payload.id, userId },
@@ -98,7 +85,7 @@ export async function completeTask(data: z.infer<typeof taskCompleteSchema>) {
 }
 
 export async function blockTask(data: z.infer<typeof taskBlockSchema>) {
-  const userId = await getUserIdFromSession();
+  const userId = await getCurrentUserId();
   const payload = taskBlockSchema.parse(data);
   return prisma.task.updateMany({
     where: { id: payload.id, userId },
@@ -110,7 +97,7 @@ export async function blockTask(data: z.infer<typeof taskBlockSchema>) {
 }
 
 export async function listTasks(filter?: z.infer<typeof listSchema>) {
-  const userId = await getUserIdFromSession();
+  const userId = await getCurrentUserId();
   const parsed = listSchema.parse(filter ?? {});
   return prisma.task.findMany({
     where: {
@@ -124,7 +111,7 @@ export async function listTasks(filter?: z.infer<typeof listSchema>) {
 }
 
 export async function createTaskWithForm(formData: FormData) {
-  const userId = await getUserIdFromSession();
+  const userId = await getCurrentUserId();
   const title = formData.get('title')?.toString().trim() ?? '';
   const description = formData.get('description')?.toString().trim();
   const priority = (formData.get('priority') as Priority) ?? Priority.P3;
@@ -169,7 +156,7 @@ export async function createTaskWithForm(formData: FormData) {
 }
 
 export async function setTaskStatusAction(formData: FormData) {
-  const userId = await getUserIdFromSession();
+  const userId = await getCurrentUserId();
   const taskId = formData.get('taskId')?.toString();
   const statusValue = formData.get('status')?.toString();
   if (!taskId || !statusValue) {

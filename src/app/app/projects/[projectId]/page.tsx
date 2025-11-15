@@ -1,7 +1,6 @@
 import Link from 'next/link';
-import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/db';
-import { getServerSession } from 'next-auth';
+import { ensureCurrentUserRecord } from '@/lib/clerkUser';
 import TaskCard from '@/components/TaskCard';
 import TaskCreator from '@/components/TaskCreator';
 import StatusCircle from '@/components/StatusCircle';
@@ -22,21 +21,14 @@ const statusBadge: Record<TaskStatus, string> = {
 
 export default async function ProjectDetailPage({ params }: ProjectPageProps) {
   const { projectId } = await params;
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.email) {
+  let user;
+  try {
+    user = await ensureCurrentUserRecord();
+  } catch {
     return (
       <section className="space-y-4 rounded-3xl border border-slate-800 bg-slate-900/70 p-8 text-center text-white shadow-[0_25px_40px_rgba(15,23,42,0.65)]">
         <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Not logged in</p>
         <p>Please log in to see tasks.</p>
-      </section>
-    );
-  }
-
-  const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-  if (!user) {
-    return (
-      <section className="space-y-4 rounded-3xl border border-slate-800 bg-slate-900/70 p-8 text-center text-white shadow-[0_25px_40px_rgba(15,23,42,0.65)]">
-        <p>User not found.</p>
       </section>
     );
   }

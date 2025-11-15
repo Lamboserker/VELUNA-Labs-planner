@@ -3,27 +3,23 @@ import PomodoroDock from '../../../components/PomodoroDock';
 import TaskCard from '../../../components/TaskCard';
 import { createTask } from '../../../actions/task';
 import prisma from '../../../lib/db';
-import { authOptions } from '../../../lib/auth';
-import { getServerSession } from 'next-auth';
+import { ensureCurrentUserRecord } from '../../../lib/clerkUser';
 import { Priority } from '@prisma/client';
 
 async function fetchTasks() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.email) {
+  try {
+    const user = await ensureCurrentUserRecord();
+    return prisma.task.findMany({
+      where: { userId: user.id },
+      include: {
+        tags: { include: { tag: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 6,
+    });
+  } catch {
     return [];
   }
-  const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-  if (!user) {
-    return [];
-  }
-  return prisma.task.findMany({
-    where: { userId: user.id },
-    include: {
-      tags: { include: { tag: true } },
-    },
-    orderBy: { createdAt: 'desc' },
-    take: 6,
-  });
 }
 
 async function handleCreateTask(formData: FormData) {
