@@ -39,14 +39,6 @@ const toLocalDateKey = (value: Date) => {
   return `${year}-${month}-${day}`;
 };
 
-const startOfWeek = (value: Date) => {
-  const start = new Date(value);
-  start.setHours(0, 0, 0, 0);
-  const offset = (start.getDay() + 6) % 7;
-  start.setDate(start.getDate() - offset);
-  return start;
-};
-
 const toTitleCase = (value?: string) => {
   if (!value) {
     return 'Kalendertermin';
@@ -89,7 +81,7 @@ export default async function PlanPage() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const dateKey = toLocalDateKey(today);
-  const weekStart = startOfWeek(today);
+  const weekStart = new Date(today);
   const planningEnd = new Date(weekStart);
   planningEnd.setDate(planningEnd.getDate() + WEEK_LENGTH - 1);
   const { plans: weeklyPlans } = await replanRange({
