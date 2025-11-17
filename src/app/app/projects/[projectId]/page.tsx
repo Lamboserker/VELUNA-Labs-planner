@@ -6,6 +6,8 @@ import TaskCreator from '@/components/TaskCreator';
 import StatusCircle from '@/components/StatusCircle';
 import { TaskStatus } from '@prisma/client';
 
+export const dynamic = 'force-dynamic';
+
 interface ProjectPageProps {
   params: Promise<{ projectId: string }>;
 }

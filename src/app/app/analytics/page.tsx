@@ -1,6 +1,8 @@
 import prisma from '../../../lib/db';
 import { ensureCurrentUserRecord } from '../../../lib/clerkUser';
 
+export const dynamic = 'force-dynamic';
+
 const statusButtons = ['Geplant', 'In Arbeit', 'Im Test', 'Erledigt', 'Blockiert', 'Abgebrochen'];
 
 export default async function AnalyticsPage() {

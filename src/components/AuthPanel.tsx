@@ -1,7 +1,8 @@
 'use client';
 
-import { FormEvent, useCallback, useMemo, useState } from 'react';
-import { useSignIn } from '@clerk/nextjs';
+import { FormEvent, useCallback, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useSignIn, useSignUp } from '@clerk/nextjs';
 
 type MessageState = {
   type: 'success' | 'error';
@@ -21,18 +22,26 @@ const errorMessage = () => ({
 });
 
 export default function AuthPanel() {
-  const { signIn, isLoaded } = useSignIn();
+  const { signIn, isLoaded: isSignInLoaded } = useSignIn();
+  const { signUp, isLoaded: isSignUpLoaded } = useSignUp();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading'>('idle');
   const [message, setMessage] = useState<MessageState | null>(null);
+  const searchParams = useSearchParams();
+  const origin =
+    typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+  const getTargetUrl = (value: string) => new URL(value, origin).toString();
 
-  const isClientReady = useMemo(() => Boolean(signIn && isLoaded), [signIn, isLoaded]);
+  const isSignInReady = Boolean(signIn && isSignInLoaded);
+  const isSignUpReady = Boolean(signUp && isSignUpLoaded);
+  const isClientReady = mode === 'register' ? isSignUpReady : isSignInReady;
+  const isGoogleReady = isSignInReady;
 
   const handleSubmit = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      if (!email || !signIn || !isLoaded) {
+      if (!email) {
         setMessage(errorMessage());
         return;
       }
@@ -41,14 +50,44 @@ export default function AuthPanel() {
       setMessage(null);
 
       try {
-        await signIn.create({
-          identifier: email,
-          strategy: 'email_link',
-        });
-        await signIn.authenticateWithRedirect({
-          strategy: 'email_link',
-          redirectUrl: '/app',
-        });
+        const returnBackUrl = searchParams.get('returnBackUrl') ?? '/app';
+        const redirectUrl = new URL('/auth', origin).toString();
+        const absoluteReturnUrl = getTargetUrl(returnBackUrl);
+
+        if (mode === 'register') {
+          if (!signUp || !isSignUpReady) {
+            setMessage(errorMessage());
+            return;
+          }
+          const createdSignUp = await signUp.create({
+            emailAddress: email,
+          });
+          await createdSignUp.createEmailLinkFlow().startEmailLinkFlow({
+            redirectUrl,
+            redirectUrlComplete: absoluteReturnUrl,
+          });
+        } else {
+          if (!signIn || !isSignInReady) {
+            setMessage(errorMessage());
+            return;
+          }
+          const createdSignIn = await signIn.create({
+            identifier: email,
+            strategy: 'email_link',
+          });
+          const emailAddressId = createdSignIn.supportedFirstFactors?.find(
+            (factor) => factor.strategy === 'email_link' && 'emailAddressId' in factor
+          )?.emailAddressId;
+
+          if (!emailAddressId) {
+            throw new Error('Email address ID not found');
+          }
+
+          await createdSignIn.createEmailLinkFlow().startEmailLinkFlow({
+            emailAddressId,
+            redirectUrl: absoluteReturnUrl,
+          });
+        }
         setMessage({
           type: 'success',
           text: successMessage(mode, email),
@@ -62,11 +101,11 @@ export default function AuthPanel() {
         setStatus('idle');
       }
     },
-    [email, isLoaded, mode, signIn]
+    [email, isSignInReady, isSignUpReady, mode, searchParams, signIn, signUp]
   );
 
   const handleGoogleSignIn = useCallback(async () => {
-    if (!signIn || !isLoaded) {
+    if (!isSignInReady || !signIn) {
       setMessage(errorMessage());
       return;
     }
@@ -75,9 +114,13 @@ export default function AuthPanel() {
     setMessage(null);
 
     try {
+      const returnBackUrl = searchParams.get('returnBackUrl') ?? '/app';
+      const redirectUrl = new URL('/auth', origin).toString();
+      const absoluteReturnUrl = getTargetUrl(returnBackUrl);
       await signIn.authenticateWithRedirect({
         strategy: 'oauth_google',
-        redirectUrl: '/app',
+        redirectUrl,
+        redirectUrlComplete: absoluteReturnUrl,
       });
     } catch (err) {
       setMessage({
@@ -86,7 +129,7 @@ export default function AuthPanel() {
       });
       setStatus('idle');
     }
-  }, [isLoaded, signIn]);
+  }, [isSignInReady, searchParams, signIn]);
 
   return (
     <div className="w-full max-w-md space-y-8 rounded-3xl border border-slate-800 bg-slate-900/70 p-8 shadow-[0_35px_60px_rgba(2,6,23,0.65)]">
@@ -153,7 +196,7 @@ export default function AuthPanel() {
         <button
           type="button"
           onClick={handleGoogleSignIn}
-          disabled={!isClientReady || status === 'loading'}
+          disabled={!isGoogleReady || status === 'loading'}
           className="mt-4 flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-white transition hover:border-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <svg

@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { TaskStatus } from '@prisma/client';
-import { useFormStatus } from 'next/navigation';
+import { useFormStatus } from 'react-dom';
 import { Calendar, Play, Search, Check } from 'lucide-react';
 import { setTaskStatusAction } from '@/actions/task';
 
@@ -22,7 +22,7 @@ type AlertVariant = 'info' | 'success' | 'error';
 type AlertState = { message: string; variant: AlertVariant } | null;
 
 export default function StatusCircle({ taskId, currentStatus }: StatusCircleProps) {
-  const { pending } = typeof useFormStatus === 'function' ? useFormStatus() : { pending: false };
+  const { pending } = useFormStatus();
   const [alert, setAlert] = useState<AlertState>(null);
   const prevPending = useRef(pending);
 

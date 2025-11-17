@@ -3,6 +3,8 @@ import prisma from '../../../lib/db';
 import { ensureCurrentUserRecord } from '../../../lib/clerkUser';
 import NewProjectForm from '../../../components/NewProjectForm';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ProjectsPage() {
   let user;
   try {

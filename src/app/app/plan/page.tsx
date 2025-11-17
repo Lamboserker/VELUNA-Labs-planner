@@ -8,6 +8,8 @@ import { replanRange } from '../../../actions/plan';
 import { ensureCurrentUserRecord } from '@/lib/clerkUser';
 import { redirect } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
+
 const formatTime = (date: Date) => date.toISOString().slice(11, 16);
 
 type WeekAppointmentKind = 'meeting' | 'focus' | 'break' | 'buffer';

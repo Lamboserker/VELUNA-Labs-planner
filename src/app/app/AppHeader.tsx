@@ -24,7 +24,6 @@ export default function AppHeader() {
   const emailLabel =
     user?.primaryEmailAddress?.emailAddress ??
     user?.emailAddresses?.[0]?.emailAddress ??
-    user?.email ??
     'demo@planner.app';
   const isAuthenticated = Boolean(user);
 

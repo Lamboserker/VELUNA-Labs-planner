@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormStatus } from 'next/navigation';
+import { useFormStatus } from 'react-dom';
 import { createProjectAction } from '@/actions/project';
 
 const spinnerDots = (
@@ -8,12 +8,19 @@ const spinnerDots = (
 );
 
 export default function NewProjectForm() {
-  const formStatus = typeof useFormStatus === 'function' ? useFormStatus() : { pending: false };
-  const { pending } = formStatus;
+  const { pending } = useFormStatus();
+
+  const handleSubmit = async (formData: FormData) => {
+    const data = {
+      name: formData.get('name') as string,
+      goal: formData.get('goal') as string | undefined,
+    };
+    await createProjectAction(data);
+  };
 
   return (
     <form
-      action={createProjectAction}
+      action={handleSubmit}
       className="flex flex-col gap-3 rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-[0_25px_40px_rgba(15,23,42,0.65)]"
     >
       <div className="flex flex-wrap items-end gap-3">

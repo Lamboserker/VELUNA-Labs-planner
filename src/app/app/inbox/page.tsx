@@ -6,6 +6,8 @@ import prisma from '../../../lib/db';
 import { ensureCurrentUserRecord } from '../../../lib/clerkUser';
 import { Priority } from '@prisma/client';
 
+export const dynamic = 'force-dynamic';
+
 async function fetchTasks() {
   try {
     const user = await ensureCurrentUserRecord();
