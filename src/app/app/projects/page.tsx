@@ -1,7 +1,10 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import prisma from '../../../lib/db';
 import { ensureCurrentUserRecord } from '../../../lib/clerkUser';
 import NewProjectForm from '../../../components/NewProjectForm';
+import { buildProjectVisibilityWhere, normalizeUserCategories } from '@/lib/accessControl';
+import { ROLE_CATEGORIES } from '@/lib/roleCategories';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,22 +20,43 @@ export default async function ProjectsPage() {
     );
   }
 
+  if (!user.isPowerUser && normalizeUserCategories(user.categories).length === 0) {
+    redirect('/app/onboarding');
+  }
+
+  const projectFilter = buildProjectVisibilityWhere(user);
   const projects = await prisma.project.findMany({
-    where: { userId: user.id },
+    where: {
+      AND: [{ userId: user.id }, projectFilter],
+    },
     include: { tasks: true },
   });
 
+  const availableCategories = user.isPowerUser
+    ? ROLE_CATEGORIES
+    : normalizeUserCategories(user.categories);
+
   return (
     <section className="space-y-8">
-      <NewProjectForm />
+      <NewProjectForm availableCategories={availableCategories} />
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Projekte</p>
           <h1 className="text-3xl font-semibold text-white">Alle Projekte</h1>
         </div>
-        <button className="rounded-full bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-400 px-6 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-white shadow">
-          Neu
-        </button>
+        <div className="flex flex-wrap gap-3">
+          {user.isPowerUser && (
+            <Link
+              href="/app/admin/users"
+              className="rounded-full border border-emerald-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300"
+            >
+              Rollen verwalten
+            </Link>
+          )}
+          <button className="rounded-full bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-400 px-6 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-white shadow">
+            Neu
+          </button>
+        </div>
       </header>
       <div className="grid gap-4 md:grid-cols-2">
         {projects.map((project) => {

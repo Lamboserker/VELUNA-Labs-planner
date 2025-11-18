@@ -2,18 +2,25 @@
 
 import { useFormStatus } from 'react-dom';
 import { createProjectAction } from '@/actions/project';
+import { ROLE_CATEGORY_LABELS, ROLE_CATEGORIES, type RoleCategoryValue } from '@/lib/roleCategories';
 
 const spinnerDots = (
   <span className="inline-flex h-4 w-4 animate-spin rounded-full border border-transparent border-t-[2px] border-t-white" aria-hidden />
 );
 
-export default function NewProjectForm() {
+type NewProjectFormProps = {
+  availableCategories: RoleCategoryValue[];
+};
+
+export default function NewProjectForm({ availableCategories }: NewProjectFormProps) {
   const { pending } = useFormStatus();
+  const categoryOptions = availableCategories.length ? availableCategories : ROLE_CATEGORIES;
 
   const handleSubmit = async (formData: FormData) => {
     const data = {
       name: formData.get('name') as string,
       goal: formData.get('goal') as string | undefined,
+      visibleToCategory: (formData.get('visibleToCategory') as RoleCategoryValue) ?? categoryOptions[0],
     };
     await createProjectAction(data);
   };
@@ -41,6 +48,20 @@ export default function NewProjectForm() {
             placeholder="Was soll erreicht werden?"
             className="mt-2 w-full rounded-2xl border border-slate-800 bg-slate-950/80 px-4 py-2 text-sm text-white placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none"
           />
+        </label>
+        <label className="flex-1 text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">
+          Kategorie
+          <select
+            name="visibleToCategory"
+            defaultValue={categoryOptions[0]}
+            className="mt-2 w-full rounded-2xl border border-slate-800 bg-slate-950/80 px-4 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none"
+          >
+            {categoryOptions.map((category) => (
+              <option key={category} value={category}>
+                {ROLE_CATEGORY_LABELS[category]} ({category})
+              </option>
+            ))}
+          </select>
         </label>
         <button
           type="submit"

@@ -4,24 +4,22 @@ import TaskCard from '../../../components/TaskCard';
 import { createTask } from '../../../actions/task';
 import prisma from '../../../lib/db';
 import { ensureCurrentUserRecord } from '../../../lib/clerkUser';
-import { Priority } from '@prisma/client';
+import { Priority, type User as PrismaUser } from '@prisma/client';
+import { buildTaskVisibilityWhere, normalizeUserCategories } from '@/lib/accessControl';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-async function fetchTasks() {
-  try {
-    const user = await ensureCurrentUserRecord();
-    return prisma.task.findMany({
-      where: { userId: user.id },
-      include: {
-        tags: { include: { tag: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 6,
-    });
-  } catch {
-    return [];
-  }
+async function fetchTasksForUser(user: PrismaUser) {
+  return prisma.task.findMany({
+    where: buildTaskVisibilityWhere(user),
+    include: {
+      tags: { include: { tag: true } },
+      assignedToUser: { select: { id: true, name: true, email: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 6,
+  });
 }
 
 async function handleCreateTask(formData: FormData) {
@@ -36,7 +34,22 @@ async function handleCreateTask(formData: FormData) {
 }
 
 export default async function InboxPage() {
-  const tasks = await fetchTasks();
+  let user;
+  try {
+    user = await ensureCurrentUserRecord();
+  } catch {
+    return (
+      <section>
+        <p className="text-white">Bitte anmelden, um Aufgaben zu sehen.</p>
+      </section>
+    );
+  }
+
+  if (!user.isPowerUser && normalizeUserCategories(user.categories).length === 0) {
+    redirect('/app/onboarding');
+  }
+
+  const tasks = await fetchTasksForUser(user);
   return (
     <section className="space-y-8">
       <div className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
@@ -55,19 +68,21 @@ export default async function InboxPage() {
           </button>
         </header>
         <div className="space-y-4">
-          {tasks.map((task) => (
-            <TaskCard
-              key={task.id}
-              title={task.title}
-              project={task.projectId ?? 'Persoenlicher Planer'}
-              status={task.status}
-              priority={task.priority}
-              estimate={`${task.estimateMin}m`}
-              due={task.dueAt ? task.dueAt.toLocaleDateString('de-DE') : '—'}
-              energy={task.energy}
-              tags={task.tags?.map((tag) => tag.tag?.name ?? tag.tagId)}
-            />
-          ))}
+        {tasks.map((task) => (
+          <TaskCard
+            key={task.id}
+            title={task.title}
+            project={task.projectId ?? 'Persoenlicher Planer'}
+            status={task.status}
+            priority={task.priority}
+            estimate={`${task.estimateMin}m`}
+            due={task.dueAt ? task.dueAt.toLocaleDateString('de-DE') : '—'}
+            energy={task.energy}
+            tags={task.tags?.map((tag) => tag.tag?.name ?? tag.tagId)}
+            assignedToName={task.assignedToUser?.name ?? task.assignedToUser?.email}
+            assignedToCurrentUser={task.assignedToUser?.id === user.id}
+          />
+        ))}
         </div>
       </div>
     </section>

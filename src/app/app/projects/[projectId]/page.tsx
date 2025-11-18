@@ -1,10 +1,17 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import prisma from '@/lib/db';
 import { ensureCurrentUserRecord } from '@/lib/clerkUser';
 import TaskCard from '@/components/TaskCard';
 import TaskCreator from '@/components/TaskCreator';
 import StatusCircle from '@/components/StatusCircle';
 import { TaskStatus } from '@prisma/client';
+import {
+  assignableUsersWhere,
+  canAccessProject,
+  normalizeUserCategories,
+} from '@/lib/accessControl';
+import { ROLE_CATEGORY_LABELS } from '@/lib/roleCategories';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,18 +42,25 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
     );
   }
 
-  const project = await prisma.project.findFirst({
-    where: { id: projectId, userId: user.id },
+  if (!user.isPowerUser && normalizeUserCategories(user.categories).length === 0) {
+    redirect('/app/onboarding');
+  }
+
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
     include: {
       tasks: {
         where: { status: { not: TaskStatus.DONE } },
         orderBy: [{ priority: 'asc' }, { dueAt: 'asc' }],
-        include: { tags: { include: { tag: true } } },
+        include: {
+          tags: { include: { tag: true } },
+          assignedToUser: true,
+        },
       },
     },
   });
 
-  if (!project) {
+  if (!project || !canAccessProject(user, project)) {
     return (
       <section className="space-y-4 rounded-3xl border border-slate-800 bg-slate-900/70 p-8 text-center text-white shadow-[0_25px_40px_rgba(15,23,42,0.65)]">
         <p>Project not found or access denied.</p>
@@ -57,6 +71,11 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
     );
   }
 
+  const assignableUsers = await prisma.user.findMany({
+    where: assignableUsersWhere(project.visibleToCategory),
+    select: { id: true, name: true, email: true, isPowerUser: true },
+  });
+
   return (
     <section className="space-y-8">
       <header className="space-y-4 rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-[0_25px_40px_rgba(15,23,42,0.65)]">
@@ -64,6 +83,9 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Project</p>
             <h1 className="text-3xl font-semibold text-white">{project.name}</h1>
+            <p className="text-xs uppercase tracking-[0.3em] text-cyan-300">
+              {ROLE_CATEGORY_LABELS[project.visibleToCategory]} ({project.visibleToCategory})
+            </p>
             <p className="text-sm text-slate-400">{project.goal ?? 'No goal defined.'}</p>
           </div>
           <span className="rounded-full border border-slate-800 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-400">
@@ -77,7 +99,11 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
         </div>
       </header>
 
-      <TaskCreator projectId={project.id} />
+      <TaskCreator
+        projectId={project.id}
+        projectCategory={project.visibleToCategory}
+        assignees={assignableUsers}
+      />
 
       <div className="space-y-4">
         {project.tasks.length ? (
@@ -98,6 +124,8 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
                   energy={task.energy}
                   tags={task.tags.map((tag) => tag.tag?.name ?? tag.tagId)}
                   statusColor={statusBadge[task.status]}
+                  assignedToName={task.assignedToUser?.name ?? task.assignedToUser?.email}
+                  assignedToCurrentUser={task.assignedToUser?.id === user.id}
                 />
               </div>
             </div>

@@ -8,6 +8,8 @@ export interface TaskCardProps {
   energy: number;
   tags?: string[];
   statusColor?: string;
+  assignedToName?: string | null;
+  assignedToCurrentUser?: boolean;
 }
 
 const priorityStyles: Record<TaskCardProps['priority'], string> = {
@@ -53,6 +55,15 @@ export default function TaskCard({
               {tag}
             </span>
           ))}
+        </div>
+      ) : null}
+      {assignedToName ? (
+        <div
+          className={`mt-4 text-[0.65rem] uppercase tracking-[0.3em] ${
+            assignedToCurrentUser ? 'text-emerald-300' : 'text-slate-400'
+          }`}
+        >
+          {assignedToCurrentUser ? 'Dir zugewiesen' : `Assigned to ${assignedToName}`}
         </div>
       ) : null}
     </article>

@@ -4,17 +4,27 @@ import { useEffect, useRef, useState } from 'react';
 import { Priority } from '@prisma/client';
 import { useFormStatus } from 'react-dom';
 import { createTaskWithForm } from '@/actions/task';
+import { ROLE_CATEGORY_LABELS, type RoleCategoryValue } from '@/lib/roleCategories';
 
 const priorityOptions: Priority[] = ['P1', 'P2', 'P3', 'P4'];
 
+type AssigneeOption = {
+  id: string;
+  name: string | null;
+  email: string | null;
+  isPowerUser: boolean;
+};
+
 type TaskCreatorProps = {
   projectId: string;
+  projectCategory: RoleCategoryValue;
+  assignees: AssigneeOption[];
 };
 
 type AlertVariant = 'info' | 'success' | 'error';
 type AlertState = { message: string; variant: AlertVariant } | null;
 
-export default function TaskCreator({ projectId }: TaskCreatorProps) {
+export default function TaskCreator({ projectId, projectCategory, assignees }: TaskCreatorProps) {
   const formStatus = useFormStatus();
   const pending = formStatus?.pending ?? false;
   const [alert, setAlert] = useState<AlertState>(null);
@@ -75,6 +85,12 @@ export default function TaskCreator({ projectId }: TaskCreatorProps) {
         )}
       </div>
       <input type="hidden" name="projectId" value={projectId} />
+      <div className="space-y-1">
+        <p className="text-[0.55rem] uppercase tracking-[0.35em] text-slate-500">Projektkategorie</p>
+        <p className="text-sm font-semibold text-white">
+          {ROLE_CATEGORY_LABELS[projectCategory]} ({projectCategory})
+        </p>
+      </div>
       <div className="space-y-2">
         <label className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Titel</label>
         <input
@@ -153,6 +169,24 @@ export default function TaskCreator({ projectId }: TaskCreatorProps) {
             multiple
             className="mt-2 w-full rounded-2xl border border-slate-800 bg-slate-950/80 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none"
           />
+        </label>
+      </div>
+      <div className="flex flex-wrap gap-4 text-xs uppercase tracking-[0.3em] text-slate-400">
+        <label className="flex-1 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+          Zuweisung
+          <select
+            name="assignedToUserId"
+            defaultValue=""
+            className="mt-2 w-full rounded-2xl border border-slate-800 bg-slate-950/80 px-4 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none"
+          >
+            <option value="">Nicht zugewiesen</option>
+            {assignees.map((assignee) => (
+              <option key={assignee.id} value={assignee.id}>
+                {assignee.name ?? assignee.email ?? 'Unbekannt'}
+                {assignee.isPowerUser ? ' (Power User)' : ''}
+              </option>
+            ))}
+          </select>
         </label>
       </div>
       <button

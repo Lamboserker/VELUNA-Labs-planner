@@ -1,6 +1,7 @@
 'use client';
+
 import Link from 'next/link';
-import { SignOutButton, useUser } from '@clerk/nextjs';
+import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import { usePathname } from 'next/navigation';
 
 const navItems = [
@@ -20,12 +21,6 @@ const dateFormatter = new Intl.DateTimeFormat('de-DE', {
 export default function AppHeader() {
   const today = dateFormatter.format(new Date());
   const pathname = usePathname() ?? '/app/plan';
-  const { user } = useUser();
-  const emailLabel =
-    user?.primaryEmailAddress?.emailAddress ??
-    user?.emailAddresses?.[0]?.emailAddress ??
-    'demo@planner.app';
-  const isAuthenticated = Boolean(user);
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-900/40 bg-slate-950/80 shadow-[0_15px_30px_rgba(15,23,42,0.6)] backdrop-blur-sm">
@@ -35,7 +30,7 @@ export default function AppHeader() {
             L
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400 ">Persoenlicher Planer</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Persoenlicher Planer</p>
             <p className="text-sm font-semibold text-white">Klarheit in jedem Fokus</p>
           </div>
         </div>
@@ -47,6 +42,7 @@ export default function AppHeader() {
                 <li key={item.label}>
                   <Link
                     href={item.href as any}
+                    prefetch={false}
                     className={`transition ${isActive ? 'text-white' : 'text-slate-400'} ${
                       isActive
                         ? 'after:content-[""] after:block after:h-0.5 after:w-full after:bg-cyan-400 after:-mt-1'
@@ -68,21 +64,20 @@ export default function AppHeader() {
             {today}
           </div>
           <div className="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/70 px-4 py-2 text-xs tracking-[0.1em] text-white">
-            <span className="block max-w-[140px] truncate">{emailLabel}</span>
-            {isAuthenticated ? (
-              <SignOutButton>
-                <button className="rounded-full border border-slate-700 px-4 py-1 text-[0.45rem] tracking-[0.3em] text-slate-200">
-                  Logout
-                </button>
-              </SignOutButton>
-            ) : (
-              <Link
-                href="/auth"
-                className="rounded-full border border-slate-700 px-4 py-1 text-[0.45rem] tracking-[0.3em] text-slate-200"
-              >
-                Login
-              </Link>
-            )}
+            <SignedOut>
+              <div className="flex items-center gap-2">
+                <Link href="/auth/login" as any prefetch={false} className="text-xs uppercase tracking-[0.3em] text-slate-200">
+                  Einloggen
+                </Link>
+                <span className="text-slate-400">/</span>
+                <Link href="/auth/register" as any prefetch={false} className="text-xs uppercase tracking-[0.3em] text-slate-200">
+                  Registrieren
+                </Link>
+              </div>
+            </SignedOut>
+            <SignedIn>
+              <UserButton afterSignOutUrl="/auth/login" />
+            </SignedIn>
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import StartPlanButton from '@/components/StartPlanButton';
 
 const metrics = [
   { label: 'Fokuszeit', value: '11 Tasks', sub: 'In Arbeit' },
@@ -20,14 +21,10 @@ export default function MarketingPage() {
             Prioritäten, Energie und Deadlines mit einem Blick.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/app/plan"
-              className="rounded-full bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-400 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white shadow-lg transition hover:shadow-2xl"
-            >
-              Jetzt starten
-            </Link>
+            <StartPlanButton />
             <Link
               href="/app"
+              prefetch={false}
               className="rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-100"
             >
               Dashboard ansehen

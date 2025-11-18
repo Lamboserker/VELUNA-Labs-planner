@@ -1,37 +1,46 @@
 import { auth, clerkClient } from '@clerk/nextjs/server';
 import prisma from './db';
+import { isPowerUserEmail } from '@/lib/accessControl';
 
 const nameFromClerkUser = (user: { firstName?: string | null; lastName?: string | null }) => {
   const names = [user.firstName?.trim(), user.lastName?.trim()].filter(Boolean);
   return names.join(' ') || null;
 };
 
-const emailFromClerkUser = (user: { emailAddresses: Array<{ emailAddress: string }>; primaryEmailAddress: { emailAddress: string } | null }) => {
+const emailFromClerkUser = (user: {
+  emailAddresses: Array<{ emailAddress: string }>;
+  primaryEmailAddress: { emailAddress: string } | null;
+}) => {
   return user.primaryEmailAddress?.emailAddress ?? user.emailAddresses[0]?.emailAddress ?? null;
 };
 
 export async function ensureCurrentUserRecord() {
-  const authState = auth();
+  const authState = await auth();
   if (!authState.userId) {
     throw new Error('Unauthorized');
   }
 
-  const clerkUser = await clerkClient.users.getUser(authState.userId);
+  const client = await clerkClient();
+  const clerkUser = await client.users.getUser(authState.userId);
   const email = emailFromClerkUser(clerkUser);
   if (!email) {
     throw new Error('Clerk user missing an email address');
   }
 
+  const isPowerUser = isPowerUserEmail(email);
   const userRecord = await prisma.user.upsert({
     where: { email },
     create: {
       email,
       name: nameFromClerkUser(clerkUser) ?? undefined,
-      image: clerkUser.profileImageUrl ?? clerkUser.imageUrl ?? undefined,
+      image: clerkUser.imageUrl ?? undefined,
+      isPowerUser,
     },
     update: {
       name: nameFromClerkUser(clerkUser) ?? undefined,
-      image: clerkUser.profileImageUrl ?? clerkUser.imageUrl ?? undefined,
+      image: clerkUser.imageUrl ?? undefined,
+      // Always enforce power-user flag for the trusted leadership emails.
+      isPowerUser,
     },
   });
 

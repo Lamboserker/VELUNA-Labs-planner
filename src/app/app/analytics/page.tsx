@@ -1,9 +1,17 @@
 import prisma from '../../../lib/db';
 import { ensureCurrentUserRecord } from '../../../lib/clerkUser';
+import { buildTaskVisibilityWhere, normalizeUserCategories } from '@/lib/accessControl';
+import { redirect } from 'next/navigation';
+import { type User as PrismaUser } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
 
 const statusButtons = ['Geplant', 'In Arbeit', 'Im Test', 'Erledigt', 'Blockiert', 'Abgebrochen'];
+
+const fetchAnalyticsTasks = (user: PrismaUser) =>
+  prisma.task.findMany({
+    where: buildTaskVisibilityWhere(user),
+  });
 
 export default async function AnalyticsPage() {
   let user;
@@ -17,9 +25,11 @@ export default async function AnalyticsPage() {
     );
   }
 
-  const tasks = await prisma.task.findMany({
-    where: { userId: user.id },
-  });
+  if (!user.isPowerUser && normalizeUserCategories(user.categories).length === 0) {
+    redirect('/app/onboarding');
+  }
+
+  const tasks = await fetchAnalyticsTasks(user);
 
   const counts = tasks.reduce<Record<string, number>>((acc, task) => {
     acc[task.status] = (acc[task.status] ?? 0) + 1;

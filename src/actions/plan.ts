@@ -1,9 +1,10 @@
 import { z } from 'zod';
-import { CalendarBlock, AllocationSource, TaskStatus } from '@prisma/client';
+import { CalendarBlock, AllocationSource, TaskStatus, type User } from '@prisma/client';
 import prisma from '@/lib/db';
 import { planDay as runPlanDay } from '@/lib/planner/engine';
 import { Allocation, PlannerTask, PlanResult } from '@/lib/planner/types';
-import { getCurrentUserId } from '@/lib/clerkUser';
+import { ensureCurrentUserRecord } from '@/lib/clerkUser';
+import { buildTaskVisibilityWhere } from '@/lib/accessControl';
 
 const planSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -22,9 +23,18 @@ const toDateKey = (date: Date) => {
   return `${year}-${month}-${day}`;
 };
 
-async function getPlannerTasks(userId: string) {
+async function getPlannerTasks(user: User) {
   const tasks = await prisma.task.findMany({
-    where: { userId, status: { not: TaskStatus.DONE } },
+    where: {
+      AND: [
+        buildTaskVisibilityWhere(user),
+        {
+          status: {
+            not: TaskStatus.DONE,
+          },
+        },
+      ],
+    },
     orderBy: { priority: 'asc' },
   });
 
@@ -62,8 +72,8 @@ async function getCalendarBlocksForRange(userId: string, start: Date, end: Date)
   });
 }
 
-async function gatherPlannerData(userId: string, date: string) {
-  const plannerTasks = await getPlannerTasks(userId);
+async function gatherPlannerData(user: User, date: string) {
+  const plannerTasks = await getPlannerTasks(user);
   const day = new Date(date);
   day.setHours(0, 0, 0, 0);
   const nextDay = new Date(day);
@@ -94,9 +104,9 @@ async function persistAllocations(allocations: Allocation[]) {
 }
 
 export async function planDayAction(input: z.infer<typeof planSchema>) {
-  const userId = await getCurrentUserId();
+  const user = await ensureCurrentUserRecord();
   const payload = planSchema.parse(input);
-  const { plannerTasks, calendarBlocks } = await gatherPlannerData(userId, payload.date);
+  const { plannerTasks, calendarBlocks } = await gatherPlannerData(user, payload.date);
 
   const planResult = runPlanDay(payload.date, {
     date: payload.date,
@@ -111,7 +121,7 @@ export async function planDayAction(input: z.infer<typeof planSchema>) {
 
 export async function replanRange(input: z.infer<typeof rangeSchema>) {
   const payload = rangeSchema.parse(input);
-  const userId = await getCurrentUserId();
+  const user = await ensureCurrentUserRecord();
   const start = new Date(payload.startDate);
   start.setHours(0, 0, 0, 0);
   const end = new Date(payload.endDate);
@@ -120,9 +130,9 @@ export async function replanRange(input: z.infer<typeof rangeSchema>) {
     throw new Error('Invalid planning range');
   }
 
-  const plannerTasks = await getPlannerTasks(userId);
+  const plannerTasks = await getPlannerTasks(user);
   const calendarBlocks = await getCalendarBlocksForRange(
-    userId,
+    user.id,
     start,
     new Date(end.getTime() + 24 * 60 * 60 * 1000)
   );
@@ -174,6 +184,6 @@ export async function replanRange(input: z.infer<typeof rangeSchema>) {
 }
 
 export async function updateCapacity(input: { date: string; hours: number; energy: number }) {
-  await getCurrentUserId();
+  await ensureCurrentUserRecord();
   return { updated: true, info: input };
 }

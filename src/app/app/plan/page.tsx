@@ -7,6 +7,7 @@ import prisma from '@/lib/db';
 import { replanRange } from '../../../actions/plan';
 import { ensureCurrentUserRecord } from '@/lib/clerkUser';
 import { redirect } from 'next/navigation';
+import { buildProjectVisibilityWhere, normalizeUserCategories } from '@/lib/accessControl';
 
 export const dynamic = 'force-dynamic';
 
@@ -74,10 +75,19 @@ const formatHours = (minutes: number) => {
 };
 
 export default async function PlanPage() {
+  let user;
   try {
-    await ensureCurrentUserRecord();
-  } catch {
-    redirect('/auth');
+    user = await ensureCurrentUserRecord();
+  } catch (error) {
+    if ((error as Error).message === 'Unauthorized') {
+      redirect('/auth/login?redirect=/app/plan');
+      return null;
+    }
+    throw error;
+  }
+
+  if (!user.isPowerUser && normalizeUserCategories(user.categories).length === 0) {
+    redirect('/app/onboarding');
   }
 
   const today = new Date();
@@ -163,20 +173,15 @@ export default async function PlanPage() {
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekEnd.getDate() + WEEK_LENGTH);
 
-  const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-  if (!user) {
-    throw new Error('Benutzer nicht gefunden');
-  }
-
   const projectIds = Array.from(
     new Set(planResult.tasks.map((task) => task.projectId).filter(Boolean))
   ) as string[];
+  const projectFilter = buildProjectVisibilityWhere(user);
   const projects =
     projectIds.length > 0
       ? await prisma.project.findMany({
           where: {
-            id: { in: projectIds },
-            userId: user.id,
+            AND: [{ id: { in: projectIds } }, projectFilter],
           },
           select: {
             id: true,
