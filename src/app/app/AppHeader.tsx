@@ -30,7 +30,7 @@ export default function AppHeader() {
             L
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Persoenlicher Planer</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Persönlicher Planer</p>
             <p className="text-sm font-semibold text-white">Klarheit in jedem Fokus</p>
           </div>
         </div>
@@ -66,11 +66,11 @@ export default function AppHeader() {
           <div className="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/70 px-4 py-2 text-xs tracking-[0.1em] text-white">
             <SignedOut>
               <div className="flex items-center gap-2">
-                <Link href="/auth/login" as any prefetch={false} className="text-xs uppercase tracking-[0.3em] text-slate-200">
+                <Link href="/auth/login" prefetch={false} className="text-xs uppercase tracking-[0.3em] text-slate-200">
                   Einloggen
                 </Link>
                 <span className="text-slate-400">/</span>
-                <Link href="/auth/register" as any prefetch={false} className="text-xs uppercase tracking-[0.3em] text-slate-200">
+                <Link href="/auth/register" prefetch={false} className="text-xs uppercase tracking-[0.3em] text-slate-200">
                   Registrieren
                 </Link>
               </div>

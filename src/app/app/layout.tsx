@@ -3,7 +3,7 @@ import '../../styles/globals.css';
 import AppHeader from './AppHeader';
 
 export const metadata = {
-  title: 'Persoenlicher Planer',
+  title: 'Persönlicher Planer',
   description: 'Alle Aufgaben, Projekte und Analysen an einem Ort.',
 };
 

@@ -1,79 +1,196 @@
-import Link from 'next/link';
-import StartPlanButton from '@/components/StartPlanButton';
+import Link from "next/link";
+import Image from "next/image";
+import StartPlanButton from "@/components/StartPlanButton";
 
 const metrics = [
-  { label: 'Fokuszeit', value: '11 Tasks', sub: 'In Arbeit' },
-  { label: 'Insights', value: '8%', sub: 'Erledigt' },
-  { label: 'Deadlines', value: '4', sub: 'Diese Woche' },
+  { label: "Geplante Fokuszeit", value: "600m", sub: "für diese Woche" },
+  { label: "Deadlines im Blick", value: "4", sub: "kritische Aufgaben" },
+  { label: "Team-Transparenz", value: "100%", sub: "Status live sichtbar" },
+];
+
+const steps = [
+  {
+    title: "Projekte anlegen",
+    desc: "Strukturiere deine Arbeit in klare Projekte mit Ziel, Kategorie und Verantwortlichen.",
+  },
+  {
+    title: "Aufgaben planen",
+    desc: "Zerlege Arbeit in Aufgaben mit Aufwand, Priorität und Energie-Level – inkl. Deadline.",
+  },
+  {
+    title: "Zeitblöcke im Kalender",
+    desc: "Der Planer verteilt Aufgaben automatisch als Termine, bis die benötigten Stunden erreicht sind.",
+  },
+];
+
+const features = [
+  {
+    title: "Projekt- & Rollenstruktur",
+    desc: "Ordne Aufgaben Projekten, Kategorien und Rollen zu. Jeder sieht genau, was zu ihm gehört.",
+  },
+  {
+    title: "Aufgaben, Prioritäten & Energie",
+    desc: "Plane nach Priorität, Energie und Fokusfenstern statt nach einer simplen To-do-Liste.",
+  },
+  {
+    title: "Kalender & Fokusfenster",
+    desc: "Verknüpfe deinen Kalender, blocke Meetings und halte freie Fokuszeit konsequent frei.",
+  },
+  {
+    title: "Analysen & Fortschritt",
+    desc: "Sieh in Echtzeit, wie viel erledigt ist, wo Blocker sitzen und welche Deadlines näher kommen.",
+  },
 ];
 
 export default function MarketingPage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 px-6 py-12 text-white">
-      <div className="mx-auto grid max-w-6xl gap-10">
-        <section className="rounded-2xl bg-gradient-to-br from-slate-900/60 via-indigo-900/70 to-purple-900/80 p-10 shadow-[0_25px_60px_rgba(15,23,42,0.7)]">
-          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-cyan-300">Persönlicher Planer</p>
-          <h1 className="mt-4 text-4xl font-semibold leading-tight text-white sm:text-5xl">
-            Eine zentrale Bühne für Aufgaben, Projekte und Analysen.
+      <div className="mx-auto flex max-w-6xl flex-col gap-16">
+        {/* HERO */}
+        <section className="relative flex flex-col items-center text-center rounded-3xl bg-gradient-to-br from-slate-950/80 via-slate-900/80 to-indigo-950/80 p-16 shadow-[0_32px_80px_rgba(15,23,42,0.85)]">
+          {/* LOGO */}
+          <div className="flex flex-col items-center">
+            <Image
+              src="/veluna-labs-logo.png"
+              alt="Veluna Labs Logo"
+              width={360}
+              height={360}
+              priority
+              className="drop-shadow-[0_40px_120px_rgba(251,146,60,0.55)]"
+            />
+
+            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300">
+              Persönlicher Planer
+            </p>
+          </div>
+
+          {/* HEADLINE */}
+          <h1 className="mt-4 text-4xl font-semibold leading-tight text-white sm:text-6xl max-w-3xl">
+            Klarheit in jedem Projekt.
+            <span className="block bg-gradient-to-r from-cyan-400 via-sky-400 to-purple-400 bg-clip-text text-transparent">
+              Aufgaben, Termine und Fokus verknüpft in einem System.
+            </span>
           </h1>
-          <p className="mt-4 max-w-3xl text-lg text-slate-300">
-            Überwachung in Echtzeit, Fokus-Impulse und die beruhigende Klarheit, dass nichts untergeht. Behalte
-            Prioritäten, Energie und Deadlines mit einem Blick.
+
+          {/* DESCRIPTION */}
+          <p className="mt-6 max-w-2xl text-lg text-slate-300">
+            Der Veluna-Labs Planer verbindet Aufgaben, Projekte und Kalender.
+            Aufgaben werden automatisch als Zeitblöcke eingeplant, bis die
+            benötigten Stunden zur Deadline erfüllt sind – damit Teams
+            zuverlässig liefern und nichts untergeht.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+
+          {/* BUTTONS */}
+          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
             <StartPlanButton />
+
             <Link
               href="/app"
               prefetch={false}
-              className="rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-100"
+              className="rounded-full border border-slate-700/80 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-100 transition hover:border-cyan-400 hover:text-cyan-200"
             >
-              Dashboard ansehen
+              Produktivitäts-Dashboard ansehen
             </Link>
           </div>
+
+          <p className="mt-4 text-xs text-slate-500">
+            Keine To-do-Liste mehr. Ein durchgehender Fokusplan.
+          </p>
         </section>
 
-        <section className="grid gap-5 md:grid-cols-3">
-          {metrics.map((metric) => (
-            <div
-              key={metric.label}
-              className="rounded-2xl bg-slate-900/70 p-5 shadow-[0_10px_40px_rgba(15,23,42,0.45)]"
-            >
-              <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">{metric.label}</p>
-              <p className="mt-4 text-3xl font-semibold text-white">{metric.value}</p>
-              <p className="text-sm text-slate-400">{metric.sub}</p>
-            </div>
-          ))}
-        </section>
-
-        <section className="grid gap-6 rounded-2xl bg-slate-900/70 p-8 shadow-[0_20px_40px_rgba(15,23,42,0.55)] md:grid-cols-[1.2fr_0.8fr]">
+        {/* HOW IT WORKS */}
+        <section className="grid gap-10 rounded-3xl bg-slate-950/80 p-10 shadow-[0_24px_60px_rgba(15,23,42,0.8)] md:grid-cols-[0.9fr_1.1fr]">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Ein Dashboard</p>
-            <h2 className="mt-3 text-3xl font-semibold text-white">Viele Perspektiven</h2>
-            <ul className="mt-5 space-y-3 text-slate-300">
-              <li className="flex items-start gap-3">
-                <span className="mt-1 h-2 w-2 rounded-full bg-cyan-400" />
-                Visualisiere Fortschritt mit Live-Metriken
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="mt-1 h-2 w-2 rounded-full bg-cyan-400" />
-                Halte Blocker und Deadlines im Blick
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="mt-1 h-2 w-2 rounded-full bg-cyan-400" />
-                Richte Prioritäten nach Energie, Fokus und Impact
-              </li>
-            </ul>
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">
+              Wie der Planer arbeitet
+            </p>
+            <h2 className="mt-3 text-3xl font-semibold text-white">
+              Von Idee zu einem realistischen Zeitplan.
+            </h2>
+            <p className="mt-4 text-slate-300">
+              Der Veluna-Labs Planer ist mehr als eine To-do-Liste: Er baut aus
+              Aufgaben einen Zeitplan, der mit deinem Kalender synchron läuft.
+              So siehst du frühzeitig, wenn Deadlines unrealistisch werden – und
+              kannst gezielt gegensteuern.
+            </p>
           </div>
-          <div className="rounded-2xl bg-gradient-to-br from-slate-800/60 to-slate-800 p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Status-Verteilung</p>
-            <div className="mt-5 h-2 w-full rounded-full bg-slate-700">
-              <div className="h-full w-2/5 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500" />
-              <div className="h-full w-2/5 rounded-full bg-slate-700" />
+          <div className="grid gap-5 sm:grid-cols-3 md:grid-cols-3">
+            {steps.map((step, index) => (
+              <div
+                key={step.title}
+                className="relative rounded-2xl bg-slate-900/80 p-4 shadow-[0_16px_40px_rgba(15,23,42,0.7)] ring-1 ring-slate-800"
+              >
+                <div className="mb-3 inline-flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 via-sky-500 to-purple-500 text-xs font-bold text-slate-950">
+                  {index + 1}
+                </div>
+                <h3 className="text-sm font-semibold text-white">
+                  {step.title}
+                </h3>
+                <p className="mt-2 text-xs text-slate-300">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* FEATURES */}
+        <section className="space-y-8">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">
+                Kernfunktionen
+              </p>
+              <h2 className="mt-3 text-3xl font-semibold text-white">
+                Alles, was Teams für klare Planung brauchen.
+              </h2>
+              <p className="mt-3 max-w-2xl text-sm text-slate-300">
+                Projekte, Aufgaben, Termine und Analysen greifen ineinander.
+                Jede Aufgabe ist zugeordnet – jede Stunde bis zur Deadline wird
+                sichtbar verplant.
+              </p>
             </div>
-            <div className="mt-4 flex items-center justify-between text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">
-              <span>In Arbeit 3</span>
-              <span>Geplant 8</span>
-              <span>Blockiert 0</span>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            {features.map((feature) => (
+              <div
+                key={feature.title}
+                className="relative overflow-hidden rounded-3xl bg-slate-950/80 p-6 shadow-[0_24px_50px_rgba(15,23,42,0.75)] ring-1 ring-slate-800/80"
+              >
+                <div className="pointer-events-none absolute -right-14 -top-14 h-32 w-32 rounded-full bg-[conic-gradient(from_220deg,_rgba(56,189,248,0.35),_rgba(129,140,248,0.25),_transparent_70%)]" />
+                <h3 className="text-lg font-semibold text-white">
+                  {feature.title}
+                </h3>
+                <p className="mt-3 text-sm text-slate-300">{feature.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* CTA FOOTER */}
+        <section className="rounded-3xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 p-[1px] shadow-[0_26px_60px_rgba(15,23,42,0.9)]">
+          <div className="flex flex-col items-start justify-between gap-6 rounded-3xl bg-gradient-to-r from-slate-950/95 via-slate-900/95 to-indigo-950/95 px-8 py-8 md:flex-row md:items-center">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300">
+                Nächster Schritt
+              </p>
+              <h2 className="mt-3 text-2xl font-semibold text-white">
+                Starte mit klaren Fokusblöcken statt nur mit Listen.
+              </h2>
+              <p className="mt-3 text-sm text-slate-300">
+                Erstelle dein erstes Projekt, plane Aufgaben bis zur Deadline
+                und sieh zu, wie dein Kalender sich automatisch mit produktiver
+                Zeit füllt.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <StartPlanButton />
+              <Link
+                href="/auth"
+                prefetch={false}
+                className="rounded-full border border-slate-700/80 px-6 py-3 text-xs font-semibold uppercase tracking-[0.25em] text-slate-100 transition hover:border-cyan-400 hover:text-cyan-200"
+              >
+                Konto erstellen
+              </Link>
             </div>
           </div>
         </section>

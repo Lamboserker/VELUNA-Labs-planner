@@ -72,7 +72,7 @@ export default async function InboxPage() {
           <TaskCard
             key={task.id}
             title={task.title}
-            project={task.projectId ?? 'Persoenlicher Planer'}
+            project={task.projectId ?? 'Persönlicher Planer'}
             status={task.status}
             priority={task.priority}
             estimate={`${task.estimateMin}m`}

@@ -29,6 +29,8 @@ export default function TaskCard({
   energy,
   tags = [],
   statusColor = 'bg-cyan-500/10 text-cyan-300',
+  assignedToName,
+  assignedToCurrentUser,
 }: TaskCardProps) {
   return (
     <article className="rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-950/40 to-slate-900/60 px-5 py-4 shadow-[0_25px_50px_rgba(15,23,42,0.45)]">

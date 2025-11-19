@@ -3,8 +3,8 @@ import '../styles/globals.css';
 import { ClerkProvider } from '@clerk/nextjs';
 
 export const metadata = {
-  title: 'Persoenlicher Planer',
-  description: 'Die perfekte Buehne fuer Fokus, Planung und Echtzeit-Insights.',
+  title: 'Persönlicher Planer',
+  description: 'Die perfekte Buehne für Fokus, Planung und Echtzeit-Insights.',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
