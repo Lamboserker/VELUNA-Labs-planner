@@ -2,12 +2,20 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
+export interface PomodoroScheduledBlock {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+}
+
 export interface PomodoroDockProps {
   activeTask?: string;
   remaining?: number;
   cycle?: number;
   workMinutes?: number;
   breakMinutes?: number;
+  scheduledBlocks?: PomodoroScheduledBlock[];
 }
 
 const formatSeconds = (seconds: number) => {
@@ -24,14 +32,80 @@ export default function PomodoroDock({
   cycle,
   workMinutes,
   breakMinutes,
+  scheduledBlocks,
 }: PomodoroDockProps) {
-  const defaultWorkMinutes = workMinutes ?? remaining ?? 25;
+  type NormalizedBlock = {
+    id: string;
+    title: string;
+    startDate: Date;
+    endDate: Date;
+  };
+
+  type ActiveSession = {
+    id: string;
+    title: string;
+    minutesLeft: number;
+  };
+
+  const normalizedBlocks = useMemo<NormalizedBlock[]>(() => {
+    if (!scheduledBlocks?.length) {
+      return [];
+    }
+
+    return scheduledBlocks
+      .map((block) => ({
+        id: block.id,
+        title: block.title,
+        startDate: new Date(block.start),
+        endDate: new Date(block.end),
+      }))
+      .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+  }, [scheduledBlocks]);
+
+  const [activeSession, setActiveSession] = useState<ActiveSession | null>(null);
+  const displayTaskTitle = activeSession?.title ?? activeTask;
+  const activeSessionMinutes = activeSession?.minutesLeft;
+  const defaultWorkMinutes = workMinutes ?? activeSessionMinutes ?? remaining ?? 25;
   const defaultBreakMinutes = breakMinutes ?? 5;
 
   const [secondsLeft, setSecondsLeft] = useState(defaultWorkMinutes * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [isWorkSession, setIsWorkSession] = useState(true);
   const [currentCycle, setCurrentCycle] = useState(cycle ?? 1);
+
+  useEffect(() => {
+    const updateActiveSession = () => {
+      const now = new Date();
+      const currentBlock = normalizedBlocks.find(
+        (block) => block.startDate <= now && now < block.endDate
+      );
+
+      setActiveSession((previous) => {
+        if (!currentBlock) {
+          return previous ?? null;
+        }
+
+        if (previous?.id === currentBlock.id) {
+          return previous;
+        }
+
+        const minutesLeft = Math.max(
+          1,
+          Math.ceil((currentBlock.endDate.getTime() - now.getTime()) / 60000)
+        );
+
+        return {
+          id: currentBlock.id,
+          title: currentBlock.title,
+          minutesLeft,
+        };
+      });
+    };
+
+    updateActiveSession();
+    const interval = setInterval(updateActiveSession, 10_000);
+    return () => clearInterval(interval);
+  }, [normalizedBlocks]);
 
   useEffect(() => {
     setSecondsLeft(defaultWorkMinutes * 60);
@@ -103,7 +177,7 @@ export default function PomodoroDock({
       <div className="mt-3">
         <p className="text-4xl font-semibold text-white">{formatSeconds(secondsLeft)}</p>
         <p className="text-xs uppercase tracking-[0.4em] text-slate-400">{sessionLabel}</p>
-        <p className="text-sm text-slate-300">Task: {activeTask}</p>
+        <p className="text-sm text-slate-300">Task: {displayTaskTitle}</p>
       </div>
       <div className="mt-5 h-1.5 w-full rounded-full bg-slate-800/70">
         <div

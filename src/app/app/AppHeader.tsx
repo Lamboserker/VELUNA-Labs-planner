@@ -57,9 +57,13 @@ export default function AppHeader() {
           </ul>
         </nav>
         <div className="flex items-center gap-4 text-[0.55rem] font-semibold uppercase tracking-[0.35em]">
-          <button className="rounded-full bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-400 px-5 py-2 text-white shadow-[0_20px_40px_rgba(59,130,246,0.45)]">
+          <Link
+            href="/app/inbox"
+            prefetch={false}
+            className="rounded-full bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-400 px-5 py-2 text-white shadow-[0_20px_40px_rgba(59,130,246,0.45)]"
+          >
             Neu
-          </button>
+          </Link>
           <div className="rounded-full border border-slate-700 px-4 py-2 text-xs tracking-[0.15em] text-slate-400">
             {today}
           </div>

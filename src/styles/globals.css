@@ -1,3 +1,6 @@
+@import './fullcalendar-common.css';
+@import './fullcalendar-timegrid.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -10,3 +13,181 @@
 body {
   background-color: #020617;
 }
+
+.fc {
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+}
+
+.fc .fc-event {
+  border-radius: 1rem;
+  border: 1px solid transparent;
+  font-weight: 600;
+}
+
+.fc-event-meeting {
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  border-color: #0ea5e9;
+  color: #fff;
+}
+
+.fc-event-focus {
+  background: linear-gradient(135deg, #06b6d4, #0ea5e9);
+  border-color: #06b6d4;
+  color: #f8fafc;
+}
+
+.fc .fc-timegrid-slot-label,
+.fc .fc-col-header-cell-cushion,
+.fc .fc-col-header-cell-cushion span {
+  color: #94a3b8;
+}
+
+.fc {
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 1.5rem;
+  padding: 1rem;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.6));
+  box-shadow: 0 25px 60px rgba(2, 6, 23, 0.6);
+}
+
+.fc .fc-toolbar {
+  padding-bottom: 0.75rem;
+}
+
+.fc .fc-toolbar-chunk button {
+  border-radius: 9999px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.75);
+  color: #e2e8f0;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  font-size: 0.65rem;
+  padding: 0.45rem 1rem;
+}
+
+.fc .fc-toolbar-chunk button:hover,
+.fc .fc-toolbar-chunk button:focus {
+  border-color: rgba(236, 72, 153, 0.6);
+}
+
+.fc .fc-toolbar-chunk .fc-button-active {
+  background: linear-gradient(135deg, #a855f7, #0ea5e9);
+  border-color: transparent;
+  color: #fff;
+}
+
+.fc .fc-daygrid-day-frame {
+  border-radius: 1rem;
+}
+
+.fc .fc-daygrid-day-top {
+  font-weight: 600;
+  color: #cbd5f5;
+}
+
+.fc .fc-daygrid-day-events {
+  gap: 0.35rem;
+  margin-top: 0.3rem;
+}
+
+.fc .fc-daygrid-day-frame {
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.fc .fc-daygrid-day {
+  border: none;
+  background: none;
+}
+
+.fc .fc-daygrid-day-top {
+  flex-direction: column;
+}
+
+.fc .fc-daygrid-day-top .fc-daygrid-day-number {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.fc .fc-daygrid-week-number {
+  position: absolute;
+  right: 0.5rem;
+  top: 0.5rem;
+  background: rgba(15, 23, 42, 0.8);
+  padding: 0.15rem 0.35rem;
+  border-radius: 999px;
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #cbd5f5;
+  border: none;
+}
+
+.fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-frame {
+  background: linear-gradient(180deg, rgba(14, 165, 233, 0.2), rgba(15, 23, 42, 0.7));
+  border-radius: 1.25rem;
+  border-color: rgba(14, 165, 233, 0.6);
+  box-shadow: 0 0 25px rgba(14, 165, 233, 0.25);
+}
+
+.fc .fc-daygrid-dot-event .fc-event-title,
+.fc .fc-daygrid-event .fc-event-title {
+  font-size: 0.8rem;
+  line-height: 1.3rem;
+}
+
+.fc .fc-daygrid-event {
+  border-radius: 0.75rem;
+  padding: 0.3rem 0.65rem;
+  box-shadow: 0 10px 30px rgba(2, 6, 23, 0.35);
+}
+
+.calendar-view-toggle {
+  display: inline-flex;
+  gap: 0.5rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 999px;
+  padding: 0.25rem;
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.calendar-view-toggle__item {
+  border: none;
+  border-radius: 999px;
+  padding: 0.4rem 1.25rem;
+  background: transparent;
+  color: #cbd5f5;
+  font-size: 0.65rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.calendar-view-toggle__item--active {
+  color: #fff;
+}
+
+.calendar-view-toggle__item--active::before {
+  content: '';
+  position: absolute;
+  inset: -0.15rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #a855f7, #0ea5e9);
+  box-shadow: 0 15px 30px rgba(14, 165, 233, 0.35);
+  z-index: -1;
+}
+

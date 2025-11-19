@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import CaptureBar from '../../../components/CaptureBar';
 import PomodoroDock from '../../../components/PomodoroDock';
 import TaskCard from '../../../components/TaskCard';
@@ -16,6 +17,7 @@ async function fetchTasksForUser(user: PrismaUser) {
     include: {
       tags: { include: { tag: true } },
       assignedToUser: { select: { id: true, name: true, email: true } },
+      project: { select: { id: true, name: true } },
     },
     orderBy: { createdAt: 'desc' },
     take: 6,
@@ -63,26 +65,29 @@ export default async function InboxPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Inbox</p>
             <h1 className="text-3xl font-semibold text-white">Alles schnell erfassen</h1>
           </div>
-          <button className="rounded-2xl border border-slate-700 px-5 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-white">
+          <Link
+            href="/app/batch-edit"
+            className="rounded-2xl border border-slate-700 px-5 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:border-slate-500"
+          >
             Batch-Edit oeffnen
-          </button>
+          </Link>
         </header>
         <div className="space-y-4">
-        {tasks.map((task) => (
-          <TaskCard
-            key={task.id}
-            title={task.title}
-            project={task.projectId ?? 'Persönlicher Planer'}
-            status={task.status}
-            priority={task.priority}
-            estimate={`${task.estimateMin}m`}
-            due={task.dueAt ? task.dueAt.toLocaleDateString('de-DE') : '—'}
-            energy={task.energy}
-            tags={task.tags?.map((tag) => tag.tag?.name ?? tag.tagId)}
-            assignedToName={task.assignedToUser?.name ?? task.assignedToUser?.email}
-            assignedToCurrentUser={task.assignedToUser?.id === user.id}
-          />
-        ))}
+          {tasks.map((task) => (
+            <TaskCard
+              key={task.id}
+              title={task.title}
+              project={task.project?.name ?? 'Persönlicher Planer'}
+              status={task.status}
+              priority={task.priority}
+              estimate={`${task.estimateMin}m`}
+              due={task.dueAt ? task.dueAt.toLocaleDateString('de-DE') : '—'}
+              energy={task.energy}
+              tags={task.tags?.map((tag) => tag.tag?.name ?? tag.tagId)}
+              assignedToName={task.assignedToUser?.name ?? task.assignedToUser?.email}
+              assignedToCurrentUser={task.assignedToUser?.id === user.id}
+            />
+          ))}
         </div>
       </div>
     </section>
