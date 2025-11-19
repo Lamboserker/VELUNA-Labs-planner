@@ -2,6 +2,11 @@ import Link from "next/link";
 import Image from "next/image";
 import StartPlanButton from "@/components/StartPlanButton";
 
+import AnalyzeIcon from "@/assets/icons/analyze.png";
+import TaskIcon from "@/assets/icons/task.png";
+import CalendarIcon from "@/assets/icons/calendar.png";
+import ProjectIcon from "@/assets/icons/project.png";
+
 const metrics = [
   { label: "Geplante Fokuszeit", value: "600m", sub: "für diese Woche" },
   { label: "Deadlines im Blick", value: "4", sub: "kritische Aufgaben" },
@@ -27,18 +32,22 @@ const features = [
   {
     title: "Projekt- & Rollenstruktur",
     desc: "Ordne Aufgaben Projekten, Kategorien und Rollen zu. Jeder sieht genau, was zu ihm gehört.",
+    icon: ProjectIcon,
   },
   {
     title: "Aufgaben, Prioritäten & Energie",
     desc: "Plane nach Priorität, Energie und Fokusfenstern statt nach einer simplen To-do-Liste.",
+    icon: TaskIcon,
   },
   {
     title: "Kalender & Fokusfenster",
     desc: "Verknüpfe deinen Kalender, blocke Meetings und halte freie Fokuszeit konsequent frei.",
+    icon: CalendarIcon,
   },
   {
     title: "Analysen & Fortschritt",
     desc: "Sieh in Echtzeit, wie viel erledigt ist, wo Blocker sitzen und welche Deadlines näher kommen.",
+    icon: AnalyzeIcon,
   },
 ];
 
@@ -144,7 +153,7 @@ export default function MarketingPage() {
               </h2>
               <p className="mt-3 max-w-2xl text-sm text-slate-300">
                 Projekte, Aufgaben, Termine und Analysen greifen ineinander.
-                Jede Aufgabe ist zugeordnet – jede Stunde bis zur Deadline wird
+                Jede Aufgabe ist zugeordnet - jede Stunde bis zur Deadline wird
                 sichtbar verplant.
               </p>
             </div>
@@ -156,8 +165,18 @@ export default function MarketingPage() {
                 key={feature.title}
                 className="relative overflow-hidden rounded-3xl bg-slate-950/80 p-6 shadow-[0_24px_50px_rgba(15,23,42,0.75)] ring-1 ring-slate-800/80"
               >
-                <div className="pointer-events-none absolute -right-14 -top-14 h-32 w-32 rounded-full bg-[conic-gradient(from_220deg,_rgba(56,189,248,0.35),_rgba(129,140,248,0.25),_transparent_70%)]" />
-                <h3 className="text-lg font-semibold text-white">
+                <div className="pointer-events-none absolute -right-2 -top-10 h-32 w-32 rounded-full bg-[conic-gradient(from_220deg,_rgba(56,189,248,0.35),_rgba(129,140,248,0.25),_transparent_70%)] translate-x-6 translate-y-2">
+                  <div className="flex h-full w-full items-center justify-center">
+                    <Image
+                      src={feature.icon}
+                      alt={`${feature.title} icon`}
+                      width={44}
+                      height={44}
+                      className="h-10 w-10 object-contain"
+                    />
+                  </div>
+                </div>
+                <h3 className="mt-3 text-lg font-semibold text-white">
                   {feature.title}
                 </h3>
                 <p className="mt-3 text-sm text-slate-300">{feature.desc}</p>

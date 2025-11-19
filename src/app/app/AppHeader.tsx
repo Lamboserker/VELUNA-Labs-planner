@@ -1,37 +1,48 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
-import { usePathname } from 'next/navigation';
+import Link from "next/link";
+import Image from "next/image";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { usePathname } from "next/navigation";
 
 const navItems = [
-  { label: 'Eingang', href: '/app/inbox' },
-  { label: 'Planung', href: '/app/plan' },
-  { label: 'Aufgaben', href: '/app/projects' },
-  { label: 'Analysen', href: '/app/analytics' },
-  { label: 'Projekte', href: '/app/projects' },
+  { label: "Eingang", href: "/app/inbox" },
+  { label: "Planung", href: "/app/plan" },
+  { label: "Aufgaben", href: "/app/projects" },
+  { label: "Analysen", href: "/app/analytics" },
+  { label: "Projekte", href: "/app/projects" },
 ];
 
-const dateFormatter = new Intl.DateTimeFormat('de-DE', {
-  weekday: 'long',
-  day: 'numeric',
-  month: 'long',
+const dateFormatter = new Intl.DateTimeFormat("de-DE", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
 });
 
 export default function AppHeader() {
   const today = dateFormatter.format(new Date());
-  const pathname = usePathname() ?? '/app/plan';
+  const pathname = usePathname() ?? "/app/plan";
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-900/40 bg-slate-950/80 shadow-[0_15px_30px_rgba(15,23,42,0.6)] backdrop-blur-sm">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <div className="flex items-center gap-3 fixed left-0 top-0 ml-6 mt-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-lg font-semibold text-white shadow-[0_10px_30px_rgba(15,23,42,0.6)]">
-            L
+            <Image
+              src="/veluna-labs-logo.png"
+              alt="Veluna Labs Logo"
+              width={34}
+              height={34}
+              hre
+            />
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Persönlicher Planer</p>
-            <p className="text-sm font-semibold text-white">Klarheit in jedem Fokus</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
+              Veluna-Labs-Planer
+            </p>
+            <p className="text-sm font-semibold text-white">
+              Klarheit in jedem Fokus
+            </p>
           </div>
         </div>
         <nav>
@@ -43,10 +54,10 @@ export default function AppHeader() {
                   <Link
                     href={item.href as any}
                     prefetch={false}
-                    className={`transition ${isActive ? 'text-white' : 'text-slate-400'} ${
+                    className={`transition ${isActive ? "text-white" : "text-slate-400"} ${
                       isActive
                         ? 'after:content-[""] after:block after:h-0.5 after:w-full after:bg-cyan-400 after:-mt-1'
-                        : ''
+                        : ""
                     }`}
                   >
                     {item.label}
@@ -70,11 +81,19 @@ export default function AppHeader() {
           <div className="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/70 px-4 py-2 text-xs tracking-[0.1em] text-white">
             <SignedOut>
               <div className="flex items-center gap-2">
-                <Link href="/auth/login" prefetch={false} className="text-xs uppercase tracking-[0.3em] text-slate-200">
+                <Link
+                  href="/auth/login"
+                  prefetch={false}
+                  className="text-xs uppercase tracking-[0.3em] text-slate-200"
+                >
                   Einloggen
                 </Link>
                 <span className="text-slate-400">/</span>
-                <Link href="/auth/register" prefetch={false} className="text-xs uppercase tracking-[0.3em] text-slate-200">
+                <Link
+                  href="/auth/register"
+                  prefetch={false}
+                  className="text-xs uppercase tracking-[0.3em] text-slate-200"
+                >
                   Registrieren
                 </Link>
               </div>

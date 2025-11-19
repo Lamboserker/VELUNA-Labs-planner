@@ -32,3 +32,35 @@ export async function createProjectAction(data: z.infer<typeof createProjectSche
   });
   return project;
 }
+
+const updateProjectCategorySchema = z.object({
+  projectId: z.string().min(1),
+  visibleToCategory: z.nativeEnum(RoleCategory),
+});
+
+export async function updateProjectCategoryAction(data: z.infer<typeof updateProjectCategorySchema>) {
+  const user = await ensureCurrentUserRecord();
+  const payload = updateProjectCategorySchema.parse(data);
+
+  const project = await prisma.project.findUnique({
+    where: { id: payload.projectId },
+    select: { userId: true },
+  });
+
+  if (!project) {
+    throw new Error('Projekt nicht gefunden.');
+  }
+
+  if (!user.isPowerUser && project.userId !== user.id) {
+    throw new Error('Nur der Projektinhaber oder ein Power User kann die Rolle ändern.');
+  }
+
+  if (!canAssignToCategory(user, payload.visibleToCategory)) {
+    throw new Error('Du kannst kein Projekt für diese Kategorie anlegen.');
+  }
+
+  return prisma.project.update({
+    where: { id: payload.projectId },
+    data: { visibleToCategory: payload.visibleToCategory },
+  });
+}
