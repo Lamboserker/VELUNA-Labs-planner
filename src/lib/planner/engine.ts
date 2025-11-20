@@ -9,6 +9,7 @@ import {
   ScoreContext,
   Slot,
   SlotType,
+  WorkingDayPreference,
   UserSettings,
 } from './types';
 import { DEFAULT_SCORING, scoreTask } from './scoring';
@@ -19,6 +20,16 @@ const DEFAULT_ENERGY_WINDOWS: EnergyWindows = {
   LOW: [{ start: 16, end: 19 }],
 };
 
+const DEFAULT_WORKING_DAYS: WorkingDayPreference[] = [
+  { day: 1, startHour: 8, endHour: 17, enabled: true },
+  { day: 2, startHour: 8, endHour: 17, enabled: true },
+  { day: 3, startHour: 8, endHour: 17, enabled: true },
+  { day: 4, startHour: 8, endHour: 17, enabled: true },
+  { day: 5, startHour: 8, endHour: 16, enabled: true },
+  { day: 6, startHour: 9, endHour: 13, enabled: false },
+  { day: 0, startHour: 9, endHour: 13, enabled: false },
+];
+
 const DEFAULT_SETTINGS: UserSettings = {
   workStartHour: 8,
   workEndHour: 18,
@@ -26,13 +37,56 @@ const DEFAULT_SETTINGS: UserSettings = {
   bufferPct: 0.15,
   energyWindows: DEFAULT_ENERGY_WINDOWS,
   wipProjectsMax: 3,
+  workingDays: DEFAULT_WORKING_DAYS,
+  maxContinuousMinutes: 180,
+  breakMinutes: 15,
 };
 
+function mergeWorkingDays(settings?: WorkingDayPreference[]): WorkingDayPreference[] {
+  const merged = new Map<number, WorkingDayPreference>();
+  DEFAULT_WORKING_DAYS.forEach((entry) => merged.set(entry.day, { ...entry }));
+  (settings ?? []).forEach((entry) => {
+    if (typeof entry.day !== 'number') {
+      return;
+    }
+    const day = Math.max(0, Math.min(6, Math.trunc(entry.day)));
+    const startHour = typeof entry.startHour === 'number' ? Math.min(24, Math.max(0, entry.startHour)) : undefined;
+    const endHour = typeof entry.endHour === 'number' ? Math.min(24, Math.max(0, entry.endHour)) : undefined;
+    if (startHour === undefined || endHour === undefined || endHour <= startHour) {
+      return;
+    }
+    const base = merged.get(day) ?? { day, startHour: 8, endHour: 17, enabled: true };
+    merged.set(day, {
+      ...base,
+      startHour,
+      endHour,
+      enabled: entry.enabled ?? base.enabled,
+    });
+  });
+
+  return Array.from(merged.values()).sort((a, b) => a.day - b.day);
+}
+
 function resolveSettings(settings?: UserSettings): UserSettings {
+  const mergedDays = mergeWorkingDays(settings?.workingDays);
+  const overrideStart = settings?.workStartHour;
+  const overrideEnd = settings?.workEndHour;
+  const workingDays =
+    overrideStart !== undefined || overrideEnd !== undefined
+      ? mergedDays.map((day) => ({
+          ...day,
+          startHour: overrideStart ?? day.startHour,
+          endHour: overrideEnd ?? day.endHour,
+        }))
+      : mergedDays;
+
   return {
     ...DEFAULT_SETTINGS,
     ...settings,
     energyWindows: settings?.energyWindows ?? DEFAULT_ENERGY_WINDOWS,
+    workingDays,
+    maxContinuousMinutes: settings?.maxContinuousMinutes ?? DEFAULT_SETTINGS.maxContinuousMinutes,
+    breakMinutes: settings?.breakMinutes ?? DEFAULT_SETTINGS.breakMinutes,
   };
 }
 
@@ -56,18 +110,46 @@ function overlaps(slotStart: Date, slotEnd: Date, blockStart: Date, blockEnd: Da
   return slotStart < blockEnd && blockStart < slotEnd;
 }
 
+function hourToTimeParts(hour: number): { hours: number; minutes: number } {
+  const clamped = Math.min(24, Math.max(0, hour));
+  const wholeHours = Math.floor(clamped);
+  const minutes = Math.round((clamped - wholeHours) * 60);
+  return { hours: wholeHours, minutes };
+}
+
+function resolveWorkingWindow(date: Date, settings: UserSettings): { start: Date; end: Date } | null {
+  const dayEntry = (settings.workingDays ?? DEFAULT_WORKING_DAYS).find(
+    (entry) => entry.day === date.getDay()
+  );
+  if (!dayEntry || !dayEntry.enabled || dayEntry.endHour <= dayEntry.startHour) {
+    return null;
+  }
+
+  const startParts = hourToTimeParts(dayEntry.startHour);
+  const endParts = hourToTimeParts(dayEntry.endHour);
+  const start = new Date(date);
+  start.setHours(startParts.hours, startParts.minutes, 0, 0);
+  const end = new Date(date);
+  end.setHours(endParts.hours, endParts.minutes, 0, 0);
+
+  return { start, end };
+}
+
 export function buildSlots(date: string, userSettings?: UserSettings, calendarBlocks: CalendarBlock[] = []): Slot[] {
   const settings = resolveSettings(userSettings);
-  const dayStart = new Date(date);
-  dayStart.setHours(settings.workStartHour ?? 8, 0, 0, 0);
-  const workEnd = new Date(dayStart);
-  workEnd.setHours(settings.workEndHour ?? 18, 0, 0, 0);
+  const day = new Date(date);
+  const workingWindow = resolveWorkingWindow(day, settings);
+  if (!workingWindow) {
+    return [];
+  }
+
+  const dayStart = workingWindow.start;
+  const workEnd = workingWindow.end;
 
   const slotMinutes = settings.slotMinutes ?? 30;
-  const totalMinutes = ((settings.workEndHour ?? 18) - (settings.workStartHour ?? 8)) * 60;
-  const slotCount = Math.max(1, Math.floor(totalMinutes / slotMinutes));
   const slots: Slot[] = [];
   let focusMinutes = 0;
+  let focusStreakMinutes = 0;
 
   const cleanedBlocks = calendarBlocks.map((block) => ({
     id: block.id,
@@ -76,27 +158,53 @@ export function buildSlots(date: string, userSettings?: UserSettings, calendarBl
     type: block.type,
   }));
 
-  for (let i = 0; i < slotCount; i += 1) {
-    const start = new Date(dayStart.getTime() + i * slotMinutes * 60_000);
-    const end = new Date(start.getTime() + slotMinutes * 60_000);
+  let cursor = new Date(dayStart);
+  const breakMinutes = settings.breakMinutes ?? 15;
+  const maxStreak = settings.maxContinuousMinutes ?? 180;
+
+  while (cursor < workEnd) {
+    if (focusStreakMinutes >= maxStreak) {
+      const breakEnd = new Date(Math.min(workEnd.getTime(), cursor.getTime() + breakMinutes * 60_000));
+      slots.push({
+        id: `${date}-break-${slots.length}`,
+        start: new Date(cursor),
+        end: breakEnd,
+        energy: 'LOW',
+        type: 'break',
+        availableMinutes: 0,
+      });
+      cursor = breakEnd;
+      focusStreakMinutes = 0;
+      continue;
+    }
+
+    const start = new Date(cursor);
+    const nextEndMillis = start.getTime() + slotMinutes * 60_000;
+    const end = new Date(Math.min(workEnd.getTime(), nextEndMillis));
     const hour = hourFromDate(start);
     const energy = getEnergyWindow(hour, settings.energyWindows ?? DEFAULT_ENERGY_WINDOWS);
     const overlappingBlock = cleanedBlocks.find((block) => overlaps(start, end, block.start, block.end));
+    const slotLengthMinutes = Math.max(0, Math.round((end.getTime() - start.getTime()) / 60_000));
 
     const slot: Slot = {
-      id: `${date}-slot-${i}`,
+      id: `${date}-slot-${slots.length}`,
       start,
       end,
       energy,
       type: overlappingBlock ? 'meeting' : 'focus',
-      availableMinutes: overlappingBlock ? 0 : slotMinutes,
+      availableMinutes: overlappingBlock ? 0 : slotLengthMinutes,
       blockId: overlappingBlock?.id,
     };
 
     if (slot.type === 'focus') {
-      focusMinutes += slotMinutes;
+      focusMinutes += slotLengthMinutes;
+      focusStreakMinutes += slotLengthMinutes;
+    } else {
+      focusStreakMinutes = 0;
     }
     slots.push(slot);
+
+    cursor = end;
   }
 
   const bufferPct = settings.bufferPct ?? 0.15;
@@ -121,12 +229,16 @@ function buildTaskMap(tasks: PlannerTask[]): Map<string, PlannerTask> {
   return new Map(tasks.map((task) => [task.id, task]));
 }
 
+const isTestTask = (task: PlannerTask): boolean => /^test(?:en|ing)?$/i.test(task.title.trim());
+
 export function pickCandidates(slot: Slot, tasks: PlannerTask[], options: PlanOptions & { lastProject?: string | null }): PlannerTask | null {
   const now = options.now ?? new Date();
   const taskMap = buildTaskMap(tasks);
   const feasible = tasks.filter((task) => {
     if (task.remainingMin <= 0) return false;
-    if (task.status === TaskStatus.DONE) return false;
+    if (task.status === TaskStatus.DONE || task.status === TaskStatus.BLOCKED || task.status === TaskStatus.DEFERRED) {
+      return false;
+    }
     if (task.blockedBy?.some((blockedId) => {
       const blocker = taskMap.get(blockedId);
       return blocker ? blocker.remainingMin > 0 : true;
@@ -140,7 +252,31 @@ export function pickCandidates(slot: Slot, tasks: PlannerTask[], options: PlanOp
     return null;
   }
 
-  const scored = feasible
+  const nonTestTasks = feasible.filter((task) => !isTestTask(task));
+  const testTasks = feasible.filter(isTestTask);
+  const candidatePool = nonTestTasks.length ? nonTestTasks : testTasks;
+
+  // For IT projects, only consider one active task per assignee at a time.
+  const itAssigneePick = new Map<string, PlannerTask>();
+  const filteredFeasible = candidatePool.filter((task) => {
+    if (task.projectCategory !== 'IT') {
+      return true;
+    }
+    const assignee = task.assignedToUserId ?? 'unassigned';
+    const existing = itAssigneePick.get(assignee);
+    if (!existing) {
+      itAssigneePick.set(assignee, task);
+      return true;
+    }
+    const currentWeight = scoreTask(existing, { slot, lastProject: options.lastProject ?? null, now }, options.scoringConfig ?? DEFAULT_SCORING);
+    const incomingWeight = scoreTask(task, { slot, lastProject: options.lastProject ?? null, now }, options.scoringConfig ?? DEFAULT_SCORING);
+    if (incomingWeight > currentWeight) {
+      itAssigneePick.set(assignee, task);
+    }
+    return false;
+  });
+
+  const scored = filteredFeasible
     .map((task) => ({
       task,
       score: scoreTask(task, { slot, lastProject: options.lastProject ?? null, now }, options.scoringConfig ?? DEFAULT_SCORING),

@@ -30,12 +30,15 @@ export async function importCalendarRange(input: z.infer<typeof importSchema>) {
         end: event.end,
         type: CalendarBlockType.MEETING,
         extId: event.extId,
+        // Persist the actual Google summary (title), or fall back to a neutral label.
+        title: event.title?.trim() || 'Kalendertermin',
       },
       update: {
         start: event.start,
         end: event.end,
         type: CalendarBlockType.MEETING,
         extId: event.extId,
+        title: event.title?.trim() || 'Kalendertermin',
       },
     })
   );

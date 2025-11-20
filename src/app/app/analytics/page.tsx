@@ -1,16 +1,18 @@
 import prisma from '../../../lib/db';
 import { ensureCurrentUserRecord } from '../../../lib/clerkUser';
 import { buildTaskVisibilityWhere, normalizeUserCategories } from '@/lib/accessControl';
+import { resolveActiveProject } from '@/lib/activeProject';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { type User as PrismaUser } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
 
 const statusButtons = ['Geplant', 'In Arbeit', 'Im Test', 'Erledigt', 'Blockiert', 'Abgebrochen'];
 
-const fetchAnalyticsTasks = (user: PrismaUser) =>
+const fetchAnalyticsTasks = (user: PrismaUser, activeProjectId: string) =>
   prisma.task.findMany({
-    where: buildTaskVisibilityWhere(user),
+    where: buildTaskVisibilityWhere(user, activeProjectId),
   });
 
 export default async function AnalyticsPage() {
@@ -29,7 +31,20 @@ export default async function AnalyticsPage() {
     redirect('/app/onboarding');
   }
 
-  const tasks = await fetchAnalyticsTasks(user);
+  const activeProject = await resolveActiveProject(user);
+  if (!activeProject) {
+    return (
+      <section className="space-y-4 rounded-3xl border border-slate-800 bg-slate-900/70 p-8 text-center text-white shadow-[0_25px_40px_rgba(15,23,42,0.65)]">
+        <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Kein aktives Projekt</p>
+        <p className="text-sm text-slate-300">Bitte wähle zuerst ein aktives Projekt aus.</p>
+        <Link href="/app/projects" className="text-cyan-400 underline">
+          Zu den Projekten
+        </Link>
+      </section>
+    );
+  }
+
+  const tasks = await fetchAnalyticsTasks(user, activeProject.id);
 
   const counts = tasks.reduce<Record<string, number>>((acc, task) => {
     acc[task.status] = (acc[task.status] ?? 0) + 1;
@@ -43,6 +58,8 @@ export default async function AnalyticsPage() {
     { label: 'UEBERFÄLLIG', value: `${counts.BLOCKED ?? 0}`, sub: 'Alles unter Kontrolle' },
   ];
 
+  const totalTasks = tasks.length;
+
   const bars = [
     { label: 'Geplant', value: counts.SCHEDULED ?? 0, color: 'from-blue-500 to-indigo-500' },
     { label: 'In Arbeit', value: counts.ACTIVE ?? 0, color: 'from-cyan-500 to-sky-500' },
@@ -51,8 +68,7 @@ export default async function AnalyticsPage() {
     { label: 'Abgebrochen', value: counts.DEFERRED ?? 0, color: 'from-rose-500 to-red-500' },
   ];
 
-  const totalTasks = tasks.length || 1;
-  const completePercent = Math.round(((counts.DONE ?? 0) / totalTasks) * 100);
+  const completePercent = totalTasks === 0 ? 0 : Math.round(((counts.DONE ?? 0) / totalTasks) * 100);
 
   return (
     <section className="space-y-8">
@@ -109,17 +125,25 @@ export default async function AnalyticsPage() {
             </span>
           </div>
           <div className="mt-6 space-y-4">
-            {bars.map((bar) => (
-              <div key={bar.label} className="space-y-1">
-                <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
-                  <span>{bar.label}</span>
-                  <span>{bar.value}</span>
+            {bars.map((bar) => {
+              const percent = totalTasks === 0 ? 0 : Math.round((bar.value / totalTasks) * 100);
+              return (
+                <div key={bar.label} className="space-y-1">
+                  <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
+                    <span>{bar.label}</span>
+                    <span className="text-right">
+                      {percent}% · {bar.value} {bar.value === 1 ? 'Aufgabe' : 'Aufgaben'}
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-slate-800">
+                    <div
+                      className={`h-full rounded-full bg-gradient-to-r ${bar.color}`}
+                      style={{ width: `${percent}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="h-2 rounded-full bg-slate-800">
-                  <div className={`h-full rounded-full bg-gradient-to-r ${bar.color}`} style={{ width: `${Math.min(bar.value * 10, 100)}%` }} />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           <div className="mt-6 flex flex-wrap gap-2">
             {statusButtons.map((button) => (

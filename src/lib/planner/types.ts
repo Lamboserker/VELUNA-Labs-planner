@@ -1,4 +1,4 @@
-import { CalendarBlock, Task, TaskStatus } from '@prisma/client';
+import { CalendarBlock, RoleCategory, Task, TaskStatus } from '@prisma/client';
 
 export type EnergyWindow = 'HIGH' | 'MED' | 'LOW';
 
@@ -9,6 +9,13 @@ export interface EnergyWindowRange {
 
 export type EnergyWindows = Record<EnergyWindow, EnergyWindowRange[]>;
 
+export interface WorkingDayPreference {
+  day: number; // 0 (Sonntag) - 6 (Samstag)
+  startHour: number;
+  endHour: number;
+  enabled: boolean;
+}
+
 export interface UserSettings {
   workStartHour?: number;
   workEndHour?: number;
@@ -16,11 +23,16 @@ export interface UserSettings {
   bufferPct?: number;
   energyWindows?: EnergyWindows;
   wipProjectsMax?: number;
+  workingDays?: WorkingDayPreference[];
+  maxContinuousMinutes?: number;
+  breakMinutes?: number;
 }
 
 export interface PlannerTask extends Pick<Task, 'id' | 'title' | 'projectId' | 'status' | 'priority' | 'estimateMin' | 'energy' | 'dueAt' | 'dueStart' | 'hardDeadline' | 'blockedBy' | 'score'> {
   remainingMin: number;
   okrAlignment?: number;
+  projectCategory?: RoleCategory | null;
+  assignedToUserId?: string | null;
 }
 
 export type SlotType = 'focus' | 'meeting' | 'buffer' | 'break' | 'blocked';

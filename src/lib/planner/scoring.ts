@@ -2,10 +2,10 @@ import { Priority } from '@prisma/client';
 import { PlannerTask, ScoreContext, ScoringConfig } from './types';
 
 const PRIORITY_WEIGHT_MAP: Record<Priority, number> = {
-  P1: 1,
-  P2: 0.8,
-  P3: 0.6,
-  P4: 0.3,
+  P1: 1.2,
+  P2: 1,
+  P3: 0.5,
+  P4: 0.2,
 };
 
 const ENERGY_VALUE_MAP = {
@@ -16,8 +16,8 @@ const ENERGY_VALUE_MAP = {
 
 export const DEFAULT_SCORING: ScoringConfig = {
   weights: {
-    priority: 0.3,
-    valuePerTime: 0.2,
+    priority: 0.4,
+    valuePerTime: 0.15,
     deadline: 0.25,
     areaFocus: 0.05,
     energyMatch: 0.1,

@@ -53,10 +53,10 @@ const features = [
 
 export default function MarketingPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 px-6 py-12 text-white">
-      <div className="mx-auto flex max-w-6xl flex-col gap-16">
+    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 px-4 py-10 text-white sm:px-6 sm:py-12">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-12 sm:gap-16">
         {/* HERO */}
-        <section className="relative flex flex-col items-center text-center rounded-3xl bg-gradient-to-br from-slate-950/80 via-slate-900/80 to-indigo-950/80 p-16 shadow-[0_32px_80px_rgba(15,23,42,0.85)]">
+        <section className="relative flex flex-col items-center gap-6 rounded-3xl bg-gradient-to-br from-slate-950/80 via-slate-900/80 to-indigo-950/80 p-10 text-center shadow-[0_32px_80px_rgba(15,23,42,0.85)] sm:p-12 lg:p-16">
           {/* LOGO */}
           <div className="flex flex-col items-center">
             <Image
@@ -74,7 +74,7 @@ export default function MarketingPage() {
           </div>
 
           {/* HEADLINE */}
-          <h1 className="mt-4 text-4xl font-semibold leading-tight text-white sm:text-6xl max-w-3xl">
+          <h1 className="mt-2 max-w-3xl text-3xl font-semibold leading-tight text-white sm:mt-4 sm:text-5xl lg:text-6xl">
             Klarheit in jedem Projekt.
             <span className="block bg-gradient-to-r from-cyan-400 via-sky-400 to-purple-400 bg-clip-text text-transparent">
               Aufgaben, Termine und Fokus verknüpft in einem System.
@@ -82,7 +82,7 @@ export default function MarketingPage() {
           </h1>
 
           {/* DESCRIPTION */}
-          <p className="mt-6 max-w-2xl text-lg text-slate-300">
+          <p className="mt-4 max-w-2xl text-base text-slate-300 sm:text-lg">
             Der Veluna-Labs Planer verbindet Aufgaben, Projekte und Kalender.
             Aufgaben werden automatisch als Zeitblöcke eingeplant, bis die
             benötigten Stunden zur Deadline erfüllt sind – damit Teams
@@ -90,7 +90,7 @@ export default function MarketingPage() {
           </p>
 
           {/* BUTTONS */}
-          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:mt-10 sm:flex-row sm:gap-4">
             <StartPlanButton />
 
             <Link
@@ -108,22 +108,22 @@ export default function MarketingPage() {
         </section>
 
         {/* HOW IT WORKS */}
-        <section className="grid gap-10 rounded-3xl bg-slate-950/80 p-10 shadow-[0_24px_60px_rgba(15,23,42,0.8)] md:grid-cols-[0.9fr_1.1fr]">
-          <div>
+        <section className="grid gap-8 rounded-3xl bg-slate-950/80 p-8 shadow-[0_24px_60px_rgba(15,23,42,0.8)] md:grid-cols-[0.9fr_1.1fr] lg:gap-10 lg:p-10">
+          <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">
               Wie der Planer arbeitet
             </p>
-            <h2 className="mt-3 text-3xl font-semibold text-white">
+            <h2 className="text-2xl font-semibold text-white sm:text-3xl">
               Von Idee zu einem realistischen Zeitplan.
             </h2>
-            <p className="mt-4 text-slate-300">
+            <p className="text-sm text-slate-300 sm:mt-1 sm:text-base">
               Der Veluna-Labs Planer ist mehr als eine To-do-Liste: Er baut aus
               Aufgaben einen Zeitplan, der mit deinem Kalender synchron läuft.
               So siehst du frühzeitig, wenn Deadlines unrealistisch werden – und
               kannst gezielt gegensteuern.
             </p>
           </div>
-          <div className="grid gap-5 sm:grid-cols-3 md:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-5">
             {steps.map((step, index) => (
               <div
                 key={step.title}
@@ -148,10 +148,10 @@ export default function MarketingPage() {
               <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">
                 Kernfunktionen
               </p>
-              <h2 className="mt-3 text-3xl font-semibold text-white">
+              <h2 className="mt-3 text-2xl font-semibold text-white sm:text-3xl">
                 Alles, was Teams für klare Planung brauchen.
               </h2>
-              <p className="mt-3 max-w-2xl text-sm text-slate-300">
+              <p className="mt-3 max-w-2xl text-sm text-slate-300 sm:text-base">
                 Projekte, Aufgaben, Termine und Analysen greifen ineinander.
                 Jede Aufgabe ist zugeordnet - jede Stunde bis zur Deadline wird
                 sichtbar verplant.
@@ -159,7 +159,7 @@ export default function MarketingPage() {
             </div>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-5 sm:grid-cols-2 lg:gap-6">
             {features.map((feature) => (
               <div
                 key={feature.title}
@@ -187,15 +187,15 @@ export default function MarketingPage() {
 
         {/* CTA FOOTER */}
         <section className="rounded-3xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 p-[1px] shadow-[0_26px_60px_rgba(15,23,42,0.9)]">
-          <div className="flex flex-col items-start justify-between gap-6 rounded-3xl bg-gradient-to-r from-slate-950/95 via-slate-900/95 to-indigo-950/95 px-8 py-8 md:flex-row md:items-center">
+          <div className="flex flex-col items-start justify-between gap-6 rounded-3xl bg-gradient-to-r from-slate-950/95 via-slate-900/95 to-indigo-950/95 px-6 py-8 sm:px-8 md:flex-row md:items-center">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300">
                 Nächster Schritt
               </p>
-              <h2 className="mt-3 text-2xl font-semibold text-white">
+              <h2 className="mt-3 text-xl font-semibold text-white sm:text-2xl">
                 Starte mit klaren Fokusblöcken statt nur mit Listen.
               </h2>
-              <p className="mt-3 text-sm text-slate-300">
+              <p className="mt-3 text-sm text-slate-300 sm:text-base">
                 Erstelle dein erstes Projekt, plane Aufgaben bis zur Deadline
                 und sieh zu, wie dein Kalender sich automatisch mit produktiver
                 Zeit füllt.

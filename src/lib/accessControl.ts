@@ -54,11 +54,13 @@ export const buildProjectVisibilityWhere = (
 };
 
 // Builds the task visibility clause so inbox-only items stay private while projects follow category rules.
+// When an active project is present, restrict to that project only.
 export const buildTaskVisibilityWhere = (
-  user: Pick<User, 'id' | 'isPowerUser' | 'categories'>
+  user: Pick<User, 'id' | 'isPowerUser' | 'categories'>,
+  activeProjectId?: string
 ): Prisma.TaskWhereInput => {
   if (isPowerUser(user)) {
-    return {};
+    return activeProjectId ? { projectId: activeProjectId } : {};
   }
   const categories = normalizeUserCategories(user.categories);
   const categoryFilter: Prisma.TaskWhereInput = {
@@ -68,6 +70,12 @@ export const buildTaskVisibilityWhere = (
       },
     },
   };
+
+  if (activeProjectId) {
+    return {
+      AND: [{ projectId: activeProjectId }, categoryFilter],
+    };
+  }
 
   return {
     OR: [

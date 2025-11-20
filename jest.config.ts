@@ -6,6 +6,7 @@ const config: Config.InitialOptions = {
   roots: ['<rootDir>/tests'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   testMatch: ['**/*.spec.ts'],
+  testPathIgnorePatterns: ['/tests/e2e\\.spec\\.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },

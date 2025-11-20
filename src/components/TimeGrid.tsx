@@ -1,3 +1,7 @@
+'use client';
+
+import { useMemo, useState } from 'react';
+
 export type WeekAppointmentKind = 'meeting' | 'focus' | 'break' | 'buffer';
 
 export type WeekAppointment = {
@@ -28,9 +32,25 @@ const kindStyles: Record<WeekAppointmentKind, string> = {
 };
 
 export default function TimeGrid({ days }: TimeGridProps) {
+  const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({});
+
+  const toggleDay = (iso: string) => {
+    setExpandedDays((prev) => ({ ...prev, [iso]: !prev[iso] }));
+  };
+
+  const visibleAppointments = useMemo(
+    () =>
+      days.map((day) => {
+        const isExpanded = expandedDays[day.iso];
+        const items = isExpanded ? day.appointments : day.appointments.slice(0, 5);
+        return { ...day, items, isExpanded };
+      }),
+    [days, expandedDays]
+  );
+
   return (
     <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
-      {days.map((day) => (
+      {visibleAppointments.map((day) => (
         <div key={day.iso} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
           <header className="mb-4 flex items-center justify-between">
             <div>
@@ -42,8 +62,8 @@ export default function TimeGrid({ days }: TimeGridProps) {
             </span>
           </header>
           <div className="space-y-3">
-            {day.appointments.length ? (
-              day.appointments.map((appointment) => (
+            {day.items.length ? (
+              day.items.map((appointment) => (
                 <div
                   key={appointment.id}
                   className={`rounded-2xl border px-3 py-2 text-sm ${kindStyles[appointment.kind]}`}
@@ -59,6 +79,15 @@ export default function TimeGrid({ days }: TimeGridProps) {
             ) : (
               <p className="text-[0.7rem] uppercase tracking-[0.3em] text-slate-500">Keine Termine</p>
             )}
+            {day.appointments.length > 5 ? (
+              <button
+                type="button"
+                onClick={() => toggleDay(day.iso)}
+                className="w-full rounded-xl border border-slate-700 px-3 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-white transition hover:border-slate-500"
+              >
+                {day.isExpanded ? 'Weniger anzeigen' : 'Siehe alle Termine'}
+              </button>
+            ) : null}
           </div>
         </div>
       ))}

@@ -162,6 +162,15 @@ export default function PomodoroDock({
     setIsRunning((prev) => !prev);
   };
 
+  const togglePhase = () => {
+    setIsRunning(false);
+    setIsWorkSession((prev) => {
+      const nextIsWork = !prev;
+      setSecondsLeft((nextIsWork ? defaultWorkMinutes : defaultBreakMinutes) * 60);
+      return nextIsWork;
+    });
+  };
+
   const resetTimer = () => {
     setIsRunning(false);
     setIsWorkSession(true);
@@ -200,6 +209,13 @@ export default function PomodoroDock({
           className="rounded-2xl border border-slate-700 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-200 transition hover:border-slate-500"
         >
           Reset
+        </button>
+        <button
+          type="button"
+          onClick={togglePhase}
+          className="rounded-2xl border border-amber-500/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-200 transition hover:border-amber-400/80"
+        >
+          Switch {isWorkSession ? '→ Pause' : '→ Arbeit'}
         </button>
       </div>
     </div>

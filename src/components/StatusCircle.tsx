@@ -16,12 +16,13 @@ const sectors: { status: TaskStatus; label: string; icon: ReactNode; bg: string 
 type StatusCircleProps = {
   taskId: string;
   currentStatus: TaskStatus;
+  className?: string;
 };
 
 type AlertVariant = 'info' | 'success' | 'error';
 type AlertState = { message: string; variant: AlertVariant } | null;
 
-export default function StatusCircle({ taskId, currentStatus }: StatusCircleProps) {
+export default function StatusCircle({ taskId, currentStatus, className }: StatusCircleProps) {
   const { pending } = useFormStatus();
   const [alert, setAlert] = useState<AlertState>(null);
   const prevPending = useRef(pending);
@@ -50,7 +51,7 @@ export default function StatusCircle({ taskId, currentStatus }: StatusCircleProp
   };
 
   return (
-    <div className="space-y-2">
+    <div className={`space-y-2 ${className ?? ''}`}>
       {alert && (
         <div
           role="status"
@@ -69,7 +70,7 @@ export default function StatusCircle({ taskId, currentStatus }: StatusCircleProp
           <span>status aktualisiert…</span>
         </div>
       )}
-      <div className="grid h-32 w-32 grid-cols-2 grid-rows-2 gap-0 rounded-full border border-slate-800 bg-slate-950/60 shadow-[0_15px_25px_rgba(15,23,42,0.65)]">
+      <div className="grid aspect-square w-32 max-w-[12rem] grid-cols-2 grid-rows-2 gap-0 rounded-full border border-slate-800 bg-slate-950/60 shadow-[0_15px_25px_rgba(15,23,42,0.65)] overflow-hidden md:w-36">
         {sectors.map((sector) => (
           <form key={sector.status} action={setTaskStatusAction} className="overflow-hidden">
             <input type="hidden" name="taskId" value={taskId} />

@@ -12,7 +12,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <ClerkProvider>
       <html lang="de" className="fusion-extension-loaded">
-        <body className="bg-slate-950 text-white">
+        <body className="bg-slate-950 text-white antialiased safe-bottom">
           <div className="flex min-h-screen flex-col">
             <div className="flex-1">{children}</div>
             <ModernFooter />

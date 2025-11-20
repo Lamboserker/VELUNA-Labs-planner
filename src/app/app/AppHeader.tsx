@@ -11,6 +11,7 @@ const navItems = [
   { label: "Aufgaben", href: "/app/projects" },
   { label: "Analysen", href: "/app/analytics" },
   { label: "Projekte", href: "/app/projects" },
+  { label: "Profil", href: "/app/profile" },
 ];
 
 const dateFormatter = new Intl.DateTimeFormat("de-DE", {
@@ -33,7 +34,6 @@ export default function AppHeader() {
               alt="Veluna Labs Logo"
               width={34}
               height={34}
-              hre
             />
           </div>
           <div>

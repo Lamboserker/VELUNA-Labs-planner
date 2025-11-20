@@ -10,6 +10,7 @@ export interface TaskCardProps {
   statusColor?: string;
   assignedToName?: string | null;
   assignedToCurrentUser?: boolean;
+  className?: string;
 }
 
 const priorityStyles: Record<TaskCardProps['priority'], string> = {
@@ -31,9 +32,12 @@ export default function TaskCard({
   statusColor = 'bg-cyan-500/10 text-cyan-300',
   assignedToName,
   assignedToCurrentUser,
+  className,
 }: TaskCardProps) {
   return (
-    <article className="rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-950/40 to-slate-900/60 px-5 py-4 shadow-[0_25px_50px_rgba(15,23,42,0.45)]">
+    <article
+      className={`rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-950/40 to-slate-900/60 px-5 py-4 shadow-[0_25px_50px_rgba(15,23,42,0.45)] ${className ?? ''}`}
+    >
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-lg font-semibold text-white">{title}</h3>
         <span className={`px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] ${priorityStyles[priority]}`}>

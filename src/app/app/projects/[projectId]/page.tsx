@@ -12,6 +12,8 @@ import {
   canAccessProject,
   normalizeUserCategories,
 } from "@/lib/accessControl";
+import { deleteProjectAction } from "@/actions/project";
+import { deleteTaskAction } from "@/actions/task";
 import { ROLE_CATEGORY_LABELS, ROLE_CATEGORIES } from "@/lib/roleCategories";
 
 export const dynamic = "force-dynamic";
@@ -61,7 +63,15 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
       tasks: {
         where: { status: { not: TaskStatus.DONE } },
         orderBy: [{ priority: "asc" }, { dueAt: "asc" }],
-        include: {
+        select: {
+          id: true,
+          userId: true,
+          title: true,
+          status: true,
+          priority: true,
+          estimateMin: true,
+          dueAt: true,
+          energy: true,
           tags: { include: { tag: true } },
           assignedToUser: true,
         },
@@ -127,6 +137,14 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
           >
             Zurück zu Projekten
           </Link>
+          {canEditRole && (
+            <form action={deleteProjectAction}>
+              <input type="hidden" name="projectId" value={project.id} />
+              <button className="rounded-full border border-rose-600 px-4 py-2 text-rose-200 hover:bg-rose-600/10">
+                Projekt löschen
+              </button>
+            </form>
+          )}
         </div>
       </header>
 
@@ -143,9 +161,10 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
               key={task.id}
               className="flex flex-col gap-4 rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-[0_25px_40px_rgba(15,23,42,0.65)]"
             >
-              <div className="flex flex-wrap items-start gap-6">
+              <div className="grid gap-4 md:grid-cols-[200px_1fr] lg:grid-cols-[220px_1fr_auto] md:items-stretch">
                 <StatusCircle taskId={task.id} currentStatus={task.status} />
                 <TaskCard
+                  className="w-full h-full"
                   title={task.title}
                   project={project.name}
                   status={task.status}
@@ -162,6 +181,14 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
                   }
                   assignedToCurrentUser={task.assignedToUser?.id === user.id}
                 />
+                {(user.isPowerUser || task.userId === user.id) && (
+                  <form action={deleteTaskAction} className="flex items-center justify-end">
+                    <input type="hidden" name="taskId" value={task.id} />
+                    <button className="rounded-full border border-rose-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-rose-200 transition hover:bg-rose-500/10 hover:text-rose-100">
+                      Task löschen
+                    </button>
+                  </form>
+                )}
               </div>
             </div>
           ))

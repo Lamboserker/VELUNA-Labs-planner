@@ -3,24 +3,23 @@ import { scoreTask, valuePerTime, deadlineUrgency } from '../src/lib/planner/sco
 import { planDay } from '../src/lib/planner/engine';
 
 const now = new Date('2025-11-14T09:00:00Z');
+const baseTask: PlannerTask = {
+  id: 'task-1',
+  title: 'Test Task',
+  projectId: 'proj-1',
+  status: 'ACTIVE',
+  priority: 'P1',
+  estimateMin: 60,
+  energy: 2,
+  dueAt: new Date(now.getTime() + 1000 * 60 * 60 * 24 * 2),
+  dueStart: undefined,
+  hardDeadline: false,
+  blockedBy: [],
+  score: 0,
+  remainingMin: 60,
+};
 
 describe('scoring helpers', () => {
-  const baseTask: PlannerTask = {
-    id: 'task-1',
-    title: 'Test Task',
-    projectId: 'proj-1',
-    status: 'ACTIVE',
-    priority: 'P1',
-    estimateMin: 60,
-    energy: 2,
-    dueAt: new Date(now.getTime() + 1000 * 60 * 60 * 24 * 2),
-    dueStart: undefined,
-    hardDeadline: false,
-    blockedBy: [],
-    score: 0,
-    remainingMin: 60,
-  };
-
   it('calculates value per time with diminishing returns', () => {
     const value = valuePerTime(baseTask);
     expect(value).toBeGreaterThan(0);
@@ -51,5 +50,21 @@ describe('planner engine', () => {
 
     expect(plan.allocations.length).toBeGreaterThan(0);
     expect(plan.slots.some((slot) => slot.type === 'focus')).toBe(true);
+  });
+
+  it('inserts a break block after more than 3 hours of focus work', () => {
+    const tasks: PlannerTask[] = [{ ...baseTask, remainingMin: 240, estimateMin: 240 }];
+
+    const plan = planDay('2025-11-14', {
+      date: '2025-11-14',
+      tasks,
+      calendarBlocks: [],
+      userSettings: { workStartHour: 8, workEndHour: 12, slotMinutes: 60 },
+      now,
+    });
+
+    const breakSlots = plan.slots.filter((slot) => slot.type === 'break');
+    expect(breakSlots.length).toBeGreaterThan(0);
+    expect(breakSlots[0].availableMinutes).toBe(0);
   });
 });

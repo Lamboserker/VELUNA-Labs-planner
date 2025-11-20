@@ -81,6 +81,8 @@ model User {
   threadParticipants ThreadParticipant[]
   messageReads       MessageRead[]
   tags               Tag[]
+  // Stores working days/hours preferences for the planner.
+  workingPreferences Json?
   accounts           Account[]
   sessions           Session[]
   createdAt          DateTime            @default(now())
@@ -224,6 +226,7 @@ model CalendarBlock {
   end       DateTime
   type      CalendarBlockType
   extId     String?
+  title     String?
   user      User              @relation(fields: [userId], references: [id])
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt

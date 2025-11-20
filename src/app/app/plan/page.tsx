@@ -13,12 +13,16 @@ import {
   buildProjectVisibilityWhere,
   normalizeUserCategories,
 } from "@/lib/accessControl";
+import { resolveActiveProject } from "@/lib/activeProject";
 import FullCalendarMonth, {
   CalendarWeekEvent,
 } from "../../../components/FullCalendarMonth";
 import Link from "next/link";
+import GoogleCalendarConnectButton from "@/components/GoogleCalendarConnectButton";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
 const formatTime = (date: Date) => date.toISOString().slice(11, 16);
 
@@ -179,6 +183,27 @@ export default async function PlanPage({ searchParams }: PlanPageProps) {
     redirect("/app/onboarding");
   }
 
+  const activeProject = await resolveActiveProject(user);
+  if (!activeProject) {
+    return (
+      <section className="space-y-6 rounded-3xl border border-slate-800 bg-slate-900/70 p-8 text-center text-white shadow-[0_25px_40px_rgba(15,23,42,0.65)]">
+        <p className="text-xs uppercase tracking-[0.35em] text-slate-400">
+          Kein aktives Projekt
+        </p>
+        <p className="text-sm text-slate-300">
+          Lege zunächst ein Projekt an und setze es als aktiv, um deine Planung
+          zu sehen.
+        </p>
+        <Link
+          href="/app/projects"
+          className="inline-flex items-center justify-center rounded-full border border-cyan-500/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200"
+        >
+          Zu den Projekten
+        </Link>
+      </section>
+    );
+  }
+
   const germanNow = getGermanyNow();
   const today = new Date(germanNow);
   today.setHours(0, 0, 0, 0);
@@ -208,7 +233,7 @@ export default async function PlanPage({ searchParams }: PlanPageProps) {
     }
   });
 
-  const buildWeekHref = (offset: number) => {
+  const buildWeekHref = (offset: number): string => {
     const params = new URLSearchParams(preservedParams);
     params.set("week", String(offset));
     const query = params.toString();
@@ -361,20 +386,27 @@ export default async function PlanPage({ searchParams }: PlanPageProps) {
       task.estimateMin && task.estimateMin > 0 ? `${task.estimateMin}m` : "—",
   }));
 
-  const weekCalendarBlocks = await prisma.calendarBlock.findMany({
+  const yearStart = new Date(overviewWeekStart.getFullYear(), 0, 1);
+  const yearEnd = new Date(overviewWeekStart.getFullYear() + 1, 0, 1);
+
+  const allCalendarBlocks = await prisma.calendarBlock.findMany({
     where: {
       userId: user.id,
       start: {
-        lt: weekOverviewEnd,
+        lt: yearEnd,
       },
       end: {
-        gte: overviewWeekStart,
+        gte: yearStart,
       },
     },
     orderBy: {
       start: "asc",
     },
   });
+
+  const weekCalendarBlocks = allCalendarBlocks.filter(
+    (block) => block.start < weekOverviewEnd && block.end >= overviewWeekStart
+  );
 
   const weekDays = buildWeekDays(overviewWeekStart);
   const weekDayMap = new Map(weekDays.map((day) => [day.iso, day]));
@@ -427,6 +459,23 @@ export default async function PlanPage({ searchParams }: PlanPageProps) {
         kind: "focus",
       });
     });
+    plan.slots
+      .filter((slot) => slot.type === "break" || slot.type === "buffer")
+      .forEach((slot) => {
+        const dayKey = toLocalDateKey(new Date(slot.start));
+        const day = weekDayMap.get(dayKey);
+        if (!day) {
+          return;
+        }
+        day.appointments.push({
+          id: `${plan.date}-${slot.id}`,
+          start: formatTime(new Date(slot.start)),
+          end: formatTime(new Date(slot.end)),
+          title: slot.type === "break" ? "Pause" : "Puffer",
+          description: slot.type === "break" ? "Erholungsblock" : "Planungs-Puffer",
+          kind: slot.type === "break" ? "break" : "buffer",
+        });
+      });
   });
 
   weekDays.forEach((day) =>
@@ -438,21 +487,24 @@ export default async function PlanPage({ searchParams }: PlanPageProps) {
     })
   );
 
+  const todayScheduleDay = weekDays.find((day) => day.iso === dateKey);
+  const todayScheduleDays = todayScheduleDay ? [todayScheduleDay] : weekDays.slice(0, 1);
+
   const calendarEvents: CalendarWeekEvent[] = [
-    ...weekCalendarBlocks.map((block) => {
+    ...allCalendarBlocks.map((block) => {
       const start = new Date(block.start);
       const end = new Date(block.end);
+      const kind =
+        block.type === CalendarBlockType.MEETING
+          ? ("meeting" as const)
+          : ("focus" as const);
+      const normalizedTitle = (block.title ?? "").trim();
       return {
         id: block.id,
-        title:
-          block.extId && block.extId.length > 3
-            ? toTitleCase(block.extId)
-            : block.type === CalendarBlockType.MEETING
-              ? "Meeting"
-              : "Kalenderblock",
+        title: normalizedTitle || "Kalendertermin",
         start: start.toISOString(),
         end: end.toISOString(),
-        kind: block.type === CalendarBlockType.MEETING ? "meeting" : "focus",
+        kind,
       };
     }),
     ...weeklyPlans.flatMap((plan) =>
@@ -465,9 +517,24 @@ export default async function PlanPage({ searchParams }: PlanPageProps) {
           title: associatedTask?.title ?? "Fokusblock",
           start: allocationStart.toISOString(),
           end: allocationEnd.toISOString(),
-          kind: "focus",
+          kind: "focus" as const,
         };
       })
+    ),
+    ...weeklyPlans.flatMap((plan) =>
+      plan.slots
+        .filter((slot) => slot.type === "break" || slot.type === "buffer")
+        .map((slot) => {
+          const slotStart = new Date(slot.start);
+          const slotEnd = new Date(slot.end);
+          return {
+            id: `${plan.date}-${slot.id}`,
+            title: slot.type === "break" ? "Pause" : "Puffer",
+            start: slotStart.toISOString(),
+            end: slotEnd.toISOString(),
+            kind: slot.type === "break" ? ("break" as const) : ("buffer" as const),
+          };
+        })
     ),
   ].sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
 
@@ -527,9 +594,6 @@ export default async function PlanPage({ searchParams }: PlanPageProps) {
   const calendarConnectionLabel = weekCalendarBlocks.length
     ? "Verbunden"
     : "Nicht verbunden";
-  const calendarActionLabel = weekCalendarBlocks.length
-    ? "Synchronisieren"
-    : "Kalender verbinden";
 
   return (
     <section className="space-y-8">
@@ -575,7 +639,7 @@ export default async function PlanPage({ searchParams }: PlanPageProps) {
               {blockedCount} blockiert
             </span>
             <span className="rounded-full bg-slate-800/60 px-3 py-1 text-rose-300">
-              {overdueCount} überfällig
+              {overdueCount} ?berf?llig
             </span>
             <span className="rounded-full bg-slate-800/60 px-3 py-1 text-sky-300">
               {deadlineCount} Deadlines
@@ -607,25 +671,41 @@ export default async function PlanPage({ searchParams }: PlanPageProps) {
           </div>
         </div>
         <div className="space-y-4">
+          <div className="space-y-6 rounded-3xl border border-slate-800 bg-slate-900/60 p-6">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-slate-400">
+              Heutige Termine
+            </h2>
+            <TimeGrid days={todayScheduleDays} />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[1.4fr_0.7fr]">
+        <div className="space-y-4">
           <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">
-              Nächste Aufgaben
+              N?chste Aufgaben
             </p>
-            <div className="mt-4 space-y-4">
-              {nextTasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  title={task.title}
-                  project={task.projectId ?? "Allgemein"}
-                  status={task.status}
-                  priority={task.priority}
-                  estimate={`${task.estimateMin}m`}
-                  due={
-                    task.dueAt ? task.dueAt.toLocaleDateString("de-DE") : "—"
-                  }
-                  energy={task.energy}
-                />
-              ))}
+            <div className="relative mt-4 max-h-[260px] overflow-y-auto rounded-2xl pr-2">
+              <div className="space-y-4">
+                {nextTasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    title={task.title}
+                    project={task.projectId ?? "Allgemein"}
+                    status={task.status}
+                    priority={task.priority}
+                    estimate={`${task.estimateMin}m`}
+                    due={
+                      task.dueAt ? task.dueAt.toLocaleDateString("de-DE") : "-"
+                    }
+                    energy={task.energy}
+                  />
+                ))}
+              </div>
+              {nextTasks.length > 1 ? (
+                <div className="pointer-events-none sticky bottom-0 mt-2 h-10 bg-gradient-to-t from-slate-900/90 to-transparent" />
+              ) : null}
             </div>
           </div>
           <PomodoroDock
@@ -634,15 +714,6 @@ export default async function PlanPage({ searchParams }: PlanPageProps) {
             cycle={1}
             scheduledBlocks={pomodoroSchedule}
           />
-        </div>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[1.4fr_0.7fr]">
-        <div className="space-y-6 rounded-3xl border border-slate-800 bg-slate-900/60 p-6">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.35em] text-slate-400">
-            Wochenübersicht
-          </h2>
-          <TimeGrid days={weekDays} />
         </div>
         <PlannerSidebar
           focusBlocks={focusBlockCount}
@@ -668,19 +739,19 @@ export default async function PlanPage({ searchParams }: PlanPageProps) {
           </div>
           <div className="flex items-center gap-2">
             <Link
-              href={buildWeekHref(0)}
+              href={buildWeekHref(0) as any}
               className="rounded-2xl border border-slate-700 px-3 py-2 text-xs uppercase tracking-[0.3em] text-white"
             >
               Heute
             </Link>
             <Link
-              href={buildWeekHref(weekOffset - 1)}
+              href={buildWeekHref(weekOffset - 1) as any}
               className="rounded-2xl border border-slate-700 px-3 py-2 text-xs uppercase tracking-[0.3em] text-white"
             >
-              Zurueck
+              Zurück
             </Link>
             <Link
-              href={buildWeekHref(weekOffset + 1)}
+              href={buildWeekHref(weekOffset + 1) as any}
               className="rounded-2xl border border-slate-700 px-3 py-2 text-xs uppercase tracking-[0.3em] text-white"
             >
               Weiter
@@ -764,9 +835,7 @@ export default async function PlanPage({ searchParams }: PlanPageProps) {
             <p className="text-lg font-semibold text-white">
               {calendarConnectionLabel}
             </p>
-            <button className="mt-3 w-full rounded-2xl bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-400 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white">
-              {calendarActionLabel}
-            </button>
+            <GoogleCalendarConnectButton connected={weekCalendarBlocks.length > 0} />
           </div>
         </div>
       </div>

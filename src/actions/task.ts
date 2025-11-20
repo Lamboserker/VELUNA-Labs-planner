@@ -1,16 +1,13 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { Priority, TaskStatus } from '@prisma/client';
 import type { Prisma, RoleCategory, User } from '@prisma/client';
 import { z } from 'zod';
 import prisma from '@/lib/db';
 import { ensureCurrentUserRecord } from '@/lib/clerkUser';
-import {
-  buildTaskVisibilityWhere,
-  canAccessProject,
-  userHasCategory,
-  isPowerUser,
-} from '@/lib/accessControl';
+import { buildTaskVisibilityWhere, canAccessProject, userHasCategory, isPowerUser } from '@/lib/accessControl';
+import { resolveActiveProject } from '@/lib/activeProject';
 
 const taskCreateSchema = z.object({
   title: z.string().min(3),
@@ -35,6 +32,19 @@ const taskBlockSchema = z.object({
   id: z.string(),
   reason: z.string().min(5),
 });
+
+const taskDeleteSchema = z.object({
+  id: z.string(),
+});
+
+const revalidateTaskViews = (projectId?: string | null) => {
+  revalidatePath('/app/inbox');
+  revalidatePath('/app/plan');
+  revalidatePath('/app/analytics');
+  if (projectId) {
+    revalidatePath(`/app/projects/${projectId}`);
+  }
+};
 
 const listSchema = z.object({
   status: z.nativeEnum(TaskStatus).optional(),
@@ -120,7 +130,9 @@ export async function createTask(data: z.infer<typeof taskCreateSchema>) {
   const payload = taskCreateSchema.parse(data);
   const projectCategory = await resolveProjectCategory(payload.projectId, user);
   const assigneeId = await resolveAssignee(projectCategory, payload.assignedToUserId);
-  return createTaskRecord({ ...payload, userId: user.id, assignedToUserId: assigneeId });
+  const task = await createTaskRecord({ ...payload, userId: user.id, assignedToUserId: assigneeId });
+  revalidateTaskViews(task.projectId);
+  return task;
 }
 
 export async function updateTask(data: z.infer<typeof taskUpdateSchema>) {
@@ -166,13 +178,39 @@ export async function blockTask(data: z.infer<typeof taskBlockSchema>) {
     status: TaskStatus.BLOCKED,
     notes: payload.reason,
   });
+  revalidateTaskViews();
+  return { success: true };
+}
+
+export async function deleteTaskAction(formData: FormData) {
+  const user = await ensureCurrentUserRecord();
+  const payload = taskDeleteSchema.parse({
+    id: formData.get('taskId'),
+  });
+
+  if (isPowerUser(user)) {
+    const deleted = await prisma.task.delete({ where: { id: payload.id }, select: { projectId: true } });
+    revalidateTaskViews(deleted.projectId);
+    return { success: true };
+  }
+
+  const result = await prisma.task.deleteMany({
+    where: { id: payload.id, userId: user.id },
+  });
+
+  if (!result.count) {
+    throw new Error('Task nicht gefunden oder keine Berechtigung.');
+  }
+
+  revalidateTaskViews();
   return { success: true };
 }
 
 export async function listTasks(filter?: z.infer<typeof listSchema>) {
   const user = await ensureCurrentUserRecord();
   const parsed = listSchema.parse(filter ?? {});
-  const visibilityFilter = buildTaskVisibilityWhere(user);
+  const activeProject = await resolveActiveProject(user);
+  const visibilityFilter = buildTaskVisibilityWhere(user, activeProject?.id);
   const whereCondition: Prisma.TaskWhereInput = {
     AND: [visibilityFilter],
   };
@@ -247,8 +285,17 @@ export async function setTaskStatusAction(formData: FormData) {
     throw new Error('Missing task or status');
   }
   const status = statusSchema.parse(statusValue);
-  await applyTaskAccessUpdate(user, taskId, {
-    status,
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: { projectId: true, userId: true },
   });
+
+  if (!task || (!isPowerUser(user) && task.userId !== user.id)) {
+    throw new Error('Task nicht gefunden oder keine Berechtigung.');
+  }
+
+  await applyTaskAccessUpdate(user, taskId, { status });
+
+  revalidateTaskViews(task.projectId);
   return { success: true };
 }
