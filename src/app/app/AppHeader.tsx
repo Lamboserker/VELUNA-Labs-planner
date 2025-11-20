@@ -1,28 +1,31 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import Image from "next/image";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
-import { usePathname } from "next/navigation";
+import Link from 'next/link';
+import Image from 'next/image';
+import type { Route } from 'next';
+import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
+import { usePathname } from 'next/navigation';
 
-const navItems = [
-  { label: "Eingang", href: "/app/inbox" },
-  { label: "Planung", href: "/app/plan" },
-  { label: "Aufgaben", href: "/app/projects" },
-  { label: "Analysen", href: "/app/analytics" },
-  { label: "Projekte", href: "/app/projects" },
-  { label: "Profil", href: "/app/profile" },
+const navItems: Array<{ label: string; href: Route }> = [
+  { label: 'Eingang', href: '/app/inbox' },
+  { label: 'Planung', href: '/app/plan' },
+  { label: 'Aufgaben', href: '/app/projects' },
+  { label: 'Analysen', href: '/app/analytics' },
+  { label: 'Projekte', href: '/app/projects' },
+  { label: 'Profil', href: '/app/profile' },
 ];
 
-const dateFormatter = new Intl.DateTimeFormat("de-DE", {
-  weekday: "long",
-  day: "numeric",
-  month: "long",
+const dateFormatter = new Intl.DateTimeFormat('de-DE', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
 });
 
 export default function AppHeader() {
   const today = dateFormatter.format(new Date());
-  const pathname = usePathname() ?? "/app/plan";
+  const pathname = usePathname() ?? '/app/plan';
+  const loginRoute = '/auth/login' as Route;
+  const registerRoute = '/auth/register' as Route;
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-900/40 bg-slate-950/80 shadow-[0_15px_30px_rgba(15,23,42,0.6)] backdrop-blur-sm">
@@ -52,12 +55,12 @@ export default function AppHeader() {
               return (
                 <li key={item.label}>
                   <Link
-                    href={item.href as any}
+                    href={item.href}
                     prefetch={false}
-                    className={`transition ${isActive ? "text-white" : "text-slate-400"} ${
+                    className={`transition ${isActive ? 'text-white' : 'text-slate-400'} ${
                       isActive
                         ? 'after:content-[""] after:block after:h-0.5 after:w-full after:bg-cyan-400 after:-mt-1'
-                        : ""
+                        : ''
                     }`}
                   >
                     {item.label}
@@ -82,7 +85,7 @@ export default function AppHeader() {
             <SignedOut>
               <div className="flex items-center gap-2">
                 <Link
-                  href="/auth/login"
+                  href={loginRoute}
                   prefetch={false}
                   className="text-xs uppercase tracking-[0.3em] text-slate-200"
                 >
@@ -90,7 +93,7 @@ export default function AppHeader() {
                 </Link>
                 <span className="text-slate-400">/</span>
                 <Link
-                  href="/auth/register"
+                  href={registerRoute}
                   prefetch={false}
                   className="text-xs uppercase tracking-[0.3em] text-slate-200"
                 >
@@ -99,7 +102,7 @@ export default function AppHeader() {
               </div>
             </SignedOut>
             <SignedIn>
-              <UserButton afterSignOutUrl="/auth/login" />
+              <UserButton afterSignOutUrl={loginRoute} />
             </SignedIn>
           </div>
         </div>

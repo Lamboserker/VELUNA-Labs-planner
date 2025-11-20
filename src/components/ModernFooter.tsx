@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Route } from "next";
 
 const productLinks = [
   { label: "Startseite", href: "/" },
@@ -20,6 +21,32 @@ const contactLinks = [
 ];
 
 export default function ModernFooter() {
+  const renderNavLink = (item: { label: string; href: string }) => {
+    const isExternal = item.href.startsWith("http");
+    if (isExternal) {
+      return (
+        <a
+          key={item.href}
+          href={item.href}
+          className="text-slate-300 transition hover:text-white"
+          target="_blank"
+          rel="noreferrer"
+        >
+          {item.label}
+        </a>
+      );
+    }
+    return (
+      <Link
+        key={item.href}
+        href={item.href as Route}
+        className="text-slate-300 transition hover:text-white"
+      >
+        {item.label}
+      </Link>
+    );
+  };
+
   return (
     <footer className="border-t border-slate-800/70 bg-slate-950/90 text-slate-300">
       <div className="mx-auto flex max-w-6xl flex-col gap-12 px-6 py-10 sm:px-8">
@@ -53,20 +80,7 @@ export default function ModernFooter() {
               Produkt
             </p>
             <div className="mt-4 flex flex-col gap-3 text-sm">
-              {productLinks.map((item) => {
-                const isExternal = item.href.startsWith("http");
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="text-slate-300 transition hover:text-white"
-                    target={isExternal ? "_blank" : undefined}
-                    rel={isExternal ? "noreferrer" : undefined}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
+              {productLinks.map((item) => renderNavLink(item))}
             </div>
           </div>
           <div>
@@ -74,15 +88,7 @@ export default function ModernFooter() {
               Rechtliches
             </p>
             <div className="mt-4 flex flex-col gap-3 text-sm">
-              {legalLinks.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="text-slate-300 transition hover:text-white"
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {legalLinks.map((item) => renderNavLink(item))}
             </div>
           </div>
           <div>
@@ -90,20 +96,7 @@ export default function ModernFooter() {
               Service
             </p>
             <div className="mt-4 flex flex-col gap-3 text-sm">
-              {contactLinks.map((item) => {
-                const isExternal = item.href.startsWith("http");
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="text-slate-300 transition hover:text-white"
-                    target={isExternal ? "_blank" : undefined}
-                    rel={isExternal ? "noreferrer" : undefined}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
+              {contactLinks.map((item) => renderNavLink(item))}
             </div>
           </div>
         </div>
@@ -113,15 +106,7 @@ export default function ModernFooter() {
             © {new Date().getFullYear()} Veluna Labs. Alle Rechte vorbehalten.
           </p>
           <div className="flex flex-wrap gap-4 text-[0.69rem]">
-            {legalLinks.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="transition hover:text-white"
-              >
-                {item.label}
-              </Link>
-            ))}
+            {legalLinks.map((item) => renderNavLink(item))}
           </div>
         </div>
       </div>

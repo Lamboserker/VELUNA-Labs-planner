@@ -1,14 +1,14 @@
 import { Prisma } from '@prisma/client';
 import prisma from './db';
-import { UserSettings, WorkingDayPreference } from './planner/types';
+import type { UserSettings, WorkingDayPreference } from './planner/types';
 import {
   DEFAULT_WORKING_DAYS,
   DEFAULT_WORKING_PREFERENCES,
-  WorkingPreferences,
   mergeWorkingDays,
 } from './workingPreferencesShared';
+import type { WorkingPreferences } from './workingPreferencesShared';
 
-export function normalizeWorkingPreferences(raw?: Prisma.JsonValue | null): WorkingPreferences {
+export function normalizeWorkingPreferences(raw?: Prisma.JsonValue | WorkingPreferences | null): WorkingPreferences {
   if (!raw || typeof raw !== 'object') {
     return { ...DEFAULT_WORKING_PREFERENCES, workingDays: [...DEFAULT_WORKING_DAYS] };
   }
@@ -69,11 +69,13 @@ export async function loadUserPlannerSettings(userId: string): Promise<UserSetti
 
 export async function updateWorkingPreferences(userId: string, preferences: WorkingPreferences): Promise<WorkingPreferences> {
   const normalized = normalizeWorkingPreferences(preferences);
+  const serialized = JSON.parse(JSON.stringify(normalized)) as Prisma.InputJsonValue;
   await prisma.user.update({
     where: { id: userId },
-    data: { workingPreferences: normalized as Prisma.InputJsonValue },
+    data: { workingPreferences: serialized },
   });
   return normalized;
 }
 
-export { DEFAULT_WORKING_DAYS, DEFAULT_WORKING_PREFERENCES, mergeWorkingDays, WorkingPreferences } from './workingPreferencesShared';
+export { DEFAULT_WORKING_DAYS, DEFAULT_WORKING_PREFERENCES, mergeWorkingDays } from './workingPreferencesShared';
+export type { WorkingPreferences } from './workingPreferencesShared';

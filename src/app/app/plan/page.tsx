@@ -498,10 +498,10 @@ export default async function PlanPage({ searchParams }: PlanPageProps) {
         block.type === CalendarBlockType.MEETING
           ? ("meeting" as const)
           : ("focus" as const);
-      const normalizedTitle = (block.title ?? "").trim();
+      const normalizedTitle = toTitleCase(block.extId ?? "");
       return {
         id: block.id,
-        title: normalizedTitle || "Kalendertermin",
+        title: normalizedTitle,
         start: start.toISOString(),
         end: end.toISOString(),
         kind,

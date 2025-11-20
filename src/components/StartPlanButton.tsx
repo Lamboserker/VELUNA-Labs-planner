@@ -2,6 +2,7 @@
 
 import { MouseEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import type { Route } from 'next';
 import { useUser } from '@clerk/nextjs';
 
 export default function StartPlanButton() {
@@ -13,7 +14,8 @@ export default function StartPlanButton() {
     if (!isLoaded) {
       return;
     }
-    router.push(isSignedIn ? '/app/plan' : '/auth/login?redirect=/app/plan');
+    const target = (isSignedIn ? '/app/plan' : '/auth/login?redirect=/app/plan') as Route;
+    router.push(target);
   };
 
   return (

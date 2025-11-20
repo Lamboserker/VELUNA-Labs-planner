@@ -84,9 +84,11 @@ const setActiveProjectSchema = z.object({
   projectId: z.string().min(1),
 });
 
-export async function setActiveProjectAction(data: z.infer<typeof setActiveProjectSchema>) {
+export async function setActiveProjectAction(formData: FormData) {
   const user = await ensureCurrentUserRecord();
-  const payload = setActiveProjectSchema.parse(data);
+  const payload = setActiveProjectSchema.parse({
+    projectId: formData.get('projectId'),
+  });
   const projectId = await setActiveProjectForUser(user, payload.projectId);
   revalidateProjectViews(projectId);
   return { projectId };

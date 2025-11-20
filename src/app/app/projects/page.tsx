@@ -7,6 +7,7 @@ import { buildProjectVisibilityWhere, normalizeUserCategories } from '@/lib/acce
 import { resolveActiveProject } from '@/lib/activeProject';
 import { setActiveProjectAction } from '@/actions/project';
 import { ROLE_CATEGORIES } from '@/lib/roleCategories';
+import type { RoleCategory } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,8 +36,8 @@ export default async function ProjectsPage() {
   });
   const activeProject = await resolveActiveProject(user);
 
-  const availableCategories = user.isPowerUser
-    ? ROLE_CATEGORIES
+  const availableCategories: RoleCategory[] = user.isPowerUser
+    ? [...ROLE_CATEGORIES]
     : normalizeUserCategories(user.categories);
 
   return (

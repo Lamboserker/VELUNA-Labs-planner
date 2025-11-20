@@ -6,7 +6,7 @@ import TaskCard from "@/components/TaskCard";
 import TaskCreator from "@/components/TaskCreator";
 import ProjectRoleForm from "@/components/ProjectRoleForm";
 import StatusCircle from "@/components/StatusCircle";
-import { TaskStatus } from "@prisma/client";
+import { TaskStatus, RoleCategory } from "@prisma/client";
 import {
   assignableUsersWhere,
   canAccessProject,
@@ -90,9 +90,9 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
     );
   }
 
-  const availableCategories = user.isPowerUser
-    ? ROLE_CATEGORIES
-    : normalizedCategories;
+  const availableCategories: RoleCategory[] = user.isPowerUser
+    ? [...ROLE_CATEGORIES]
+    : [...normalizedCategories];
   const canEditRole = user.isPowerUser || project.userId === user.id;
 
   const assignableUsers = await prisma.user.findMany({

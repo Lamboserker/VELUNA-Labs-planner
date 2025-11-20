@@ -29,7 +29,6 @@ const toFullCalendarEvents = (events: CalendarWeekEvent[]) =>
   events.map((event) => ({
     ...event,
     extendedProps: {
-      ...event.extendedProps,
       kind: event.kind,
       description: event.description,
     },
@@ -201,9 +200,7 @@ export default function FullCalendarMonth({ startDate, events }: FullCalendarMon
           dayMaxEventRows={currentView === 'dayGridMonth' ? 2 : 4}
           navLinks
           weekNumbers
-          weekNumbersWithinDays={false}
           moreLinkContent={(arg) => `${arg.num + 2} Termine`}
-          moreLinkClick={false}
           views={{
             multiMonthYear: {
               type: 'multiMonthYear',

@@ -144,15 +144,19 @@ const computeFocusMinutesToday = (tasks: TaskWithRelations[]) => {
   const endOfDay = new Date(today);
   endOfDay.setHours(23, 59, 59, 999);
 
+  const allowedStatuses: TaskStatus[] = [
+    TaskStatus.ACTIVE,
+    TaskStatus.DONE,
+    TaskStatus.SCHEDULED,
+  ];
+
   const focused = tasks
     .filter((task) => {
       const touchedAt = task.updatedAt ?? task.createdAt;
       return (
         touchedAt >= startOfDay &&
         touchedAt <= endOfDay &&
-        [TaskStatus.ACTIVE, TaskStatus.DONE, TaskStatus.SCHEDULED].includes(
-          task.status,
-        )
+        allowedStatuses.includes(task.status)
       );
     })
     .reduce((sum, task) => sum + (task.estimateMin ?? 0), 0);
@@ -249,9 +253,8 @@ export default async function InboxPage() {
   const calendarBuckets = buildCalendarBuckets(tasks);
   const agenda = buildAgenda(tasks);
   const focusSchedule = buildFocusSchedule(tasks);
-  const actionableTodos = tasks.filter(
-    (task) => ![TaskStatus.DONE, TaskStatus.DEFERRED].includes(task.status),
-  );
+  const nonActionable: TaskStatus[] = [TaskStatus.DONE, TaskStatus.DEFERRED];
+  const actionableTodos = tasks.filter((task) => !nonActionable.includes(task.status));
   const currentTask =
     tasks.find((task) => task.status === TaskStatus.ACTIVE) ?? tasks[0];
   return (

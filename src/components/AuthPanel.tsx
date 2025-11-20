@@ -63,8 +63,7 @@ export default function AuthPanel() {
             emailAddress: email,
           });
           await createdSignUp.createEmailLinkFlow().startEmailLinkFlow({
-            redirectUrl,
-            redirectUrlComplete: absoluteReturnUrl,
+            redirectUrl: absoluteReturnUrl,
           });
         } else {
           if (!signIn || !isSignInReady) {
