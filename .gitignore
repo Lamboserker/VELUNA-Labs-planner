@@ -1,5 +1,6 @@
 .env
 .env.example
+.env.vps
 .next/
 node_modules/
 dist/
