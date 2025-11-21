@@ -80,8 +80,8 @@ const calculatePriorityScore = (task: TaskWithRelations) => {
     const diffDays = Math.max(
       0,
       Math.ceil(
-        (new Date(task.dueAt).getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
-      ),
+        (new Date(task.dueAt).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      )
     );
     return Math.max(0, 1.2 - diffDays * 0.05);
   })();
@@ -105,7 +105,7 @@ const buildCalendarBuckets = (tasks: TaskWithRelations[]) => {
   endOfDay.setHours(23, 59, 59, 999);
 
   const day = tasks.filter(
-    (task) => task.dueAt && task.dueAt >= startOfDay && task.dueAt <= endOfDay,
+    (task) => task.dueAt && task.dueAt >= startOfDay && task.dueAt <= endOfDay
   );
 
   const week = tasks.filter((task) => {
@@ -139,8 +139,10 @@ const buildAgenda = (tasks: TaskWithRelations[]) =>
 
 const computeFocusMinutesToday = (tasks: TaskWithRelations[]) => {
   const today = new Date();
+
   const startOfDay = new Date(today);
   startOfDay.setHours(0, 0, 0, 0);
+
   const endOfDay = new Date(today);
   endOfDay.setHours(23, 59, 59, 999);
 
@@ -153,14 +155,16 @@ const computeFocusMinutesToday = (tasks: TaskWithRelations[]) => {
   const focused = tasks
     .filter((task) => {
       const touchedAt = task.updatedAt ?? task.createdAt;
+
       return (
         touchedAt >= startOfDay &&
         touchedAt <= endOfDay &&
-        allowedStatuses.includes(task.status)
+        allowedStatuses.includes(task.status as TaskStatus)
       );
     })
     .reduce((sum, task) => sum + (task.estimateMin ?? 0), 0);
 
+  // Fallback, wenn heute nichts geplant ist
   return focused || 76;
 };
 
@@ -170,7 +174,7 @@ const buildFocusSchedule = (tasks: TaskWithRelations[]) => {
   return prioritized.slice(0, 3).map((task, index) => {
     const start = new Date(now.getTime() + index * 45 * 60 * 1000);
     const end = new Date(
-      start.getTime() + (task.estimateMin ?? POMODORO_SLOT_MINUTES) * 60 * 1000,
+      start.getTime() + (task.estimateMin ?? POMODORO_SLOT_MINUTES) * 60 * 1000
     );
     return {
       id: task.id,
@@ -183,7 +187,8 @@ const buildFocusSchedule = (tasks: TaskWithRelations[]) => {
 
 async function handleCreateTask(formData: FormData) {
   "use server";
-  const priorityFromForm = (formData.get("priority") as Priority) ?? ("P3" as Priority);
+  const priorityFromForm =
+    (formData.get("priority") as Priority) ?? ("P3" as Priority);
   const listPreset = formData.get("listPreset")?.toString() ?? "default";
   const estimateFromForm = Number(formData.get("estimate") ?? 30);
 
@@ -197,9 +202,10 @@ async function handleCreateTask(formData: FormData) {
     default: { priority: priorityFromForm, estimate: estimateFromForm },
   } as const;
 
-  const chosenPreset = (presetConfig as Record<string, { priority: Priority; estimate: number }>)[
-    listPreset
-  ] ?? presetConfig.default;
+  const chosenPreset =
+    (presetConfig as Record<string, { priority: Priority; estimate: number }>)[
+      listPreset
+    ] ?? presetConfig.default;
 
   const payload = {
     title: formData.get("title")?.toString() ?? "",
@@ -254,7 +260,9 @@ export default async function InboxPage() {
   const agenda = buildAgenda(tasks);
   const focusSchedule = buildFocusSchedule(tasks);
   const nonActionable: TaskStatus[] = [TaskStatus.DONE, TaskStatus.DEFERRED];
-  const actionableTodos = tasks.filter((task) => !nonActionable.includes(task.status));
+  const actionableTodos = tasks.filter(
+    (task) => !nonActionable.includes(task.status)
+  );
   const currentTask =
     tasks.find((task) => task.status === TaskStatus.ACTIVE) ?? tasks[0];
   return (
@@ -278,7 +286,8 @@ export default async function InboxPage() {
                 Auto-Switch
               </p>
               <p className="mt-2 text-sm text-slate-200">
-                Wechsel automatisch zwischen Arbeits- und Pausenphase, inkl. sanftem Reset pro Zyklus.
+                Wechsel automatisch zwischen Arbeits- und Pausenphase, inkl.
+                sanftem Reset pro Zyklus.
               </p>
               <div className="mt-3 flex items-center gap-2 text-emerald-300">
                 <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
@@ -294,7 +303,8 @@ export default async function InboxPage() {
               </p>
               <p className="text-sm text-slate-300">Heute fokussiert</p>
               <p className="mt-1 text-xs text-slate-400">
-                Basierend auf aktiven &amp; erledigten Slots. Nach 20 Minuten Inaktivität: Lock-Screen Hinweis.
+                Basierend auf aktiven &amp; erledigten Slots. Nach 20 Minuten
+                Inaktivität: Lock-Screen Hinweis.
               </p>
             </div>
           </div>
@@ -315,25 +325,49 @@ export default async function InboxPage() {
               Tag, Woche oder Monat — bereit für Google Sync &amp; Farbcodes
             </h3>
             <div className="mt-4 grid grid-cols-3 gap-3 text-sm text-white">
-              {([
-                { label: "Heute", items: calendarBuckets.day, color: "from-cyan-400 to-blue-500" },
-                { label: "Woche", items: calendarBuckets.week, color: "from-amber-400 to-orange-500" },
-                { label: "Monat", items: calendarBuckets.month, color: "from-violet-400 to-purple-500" },
-              ] as const).map((bucket) => (
+              {(
+                [
+                  {
+                    label: "Heute",
+                    items: calendarBuckets.day,
+                    color: "from-cyan-400 to-blue-500",
+                  },
+                  {
+                    label: "Woche",
+                    items: calendarBuckets.week,
+                    color: "from-amber-400 to-orange-500",
+                  },
+                  {
+                    label: "Monat",
+                    items: calendarBuckets.month,
+                    color: "from-violet-400 to-purple-500",
+                  },
+                ] as const
+              ).map((bucket) => (
                 <div
                   key={bucket.label}
                   className="rounded-2xl border border-slate-800 bg-slate-900/50 p-3"
                 >
-                  <div className={`inline-flex items-center gap-2 rounded-full bg-gradient-to-r ${bucket.color} px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.25em] text-slate-950`}>
+                  <div
+                    className={`inline-flex items-center gap-2 rounded-full bg-gradient-to-r ${bucket.color} px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.25em] text-slate-950`}
+                  >
                     {bucket.label}
                   </div>
-                  <p className="mt-2 text-2xl font-semibold">{bucket.items.length}</p>
-                  <p className="text-xs text-slate-400">geplant, farbcodiert nach Projekt</p>
+                  <p className="mt-2 text-2xl font-semibold">
+                    {bucket.items.length}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    geplant, farbcodiert nach Projekt
+                  </p>
                 </div>
               ))}
             </div>
             <div className="mt-4 space-y-2">
-              {[...calendarBuckets.day, ...calendarBuckets.week, ...calendarBuckets.month]
+              {[
+                ...calendarBuckets.day,
+                ...calendarBuckets.week,
+                ...calendarBuckets.month,
+              ]
                 .slice(0, 4)
                 .map((task) => (
                   <div
@@ -341,14 +375,21 @@ export default async function InboxPage() {
                     className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-900/60 px-3 py-2"
                   >
                     <div>
-                      <p className="text-sm font-semibold text-white">{task.title}</p>
+                      <p className="text-sm font-semibold text-white">
+                        {task.title}
+                      </p>
                       <p className="text-xs text-slate-400">
-                        {task.project?.name ?? "Ohne Projekt"} · {formatShortDate(task.dueAt)}
+                        {task.project?.name ?? "Ohne Projekt"} ·{" "}
+                        {formatShortDate(task.dueAt)}
                       </p>
                     </div>
                     <span
                       className="inline-flex h-2.5 w-2.5 rounded-full"
-                      style={{ backgroundColor: hashColorFromString(task.project?.name ?? task.title) }}
+                      style={{
+                        backgroundColor: hashColorFromString(
+                          task.project?.name ?? task.title
+                        ),
+                      }}
                       aria-hidden
                     />
                   </div>
@@ -363,7 +404,8 @@ export default async function InboxPage() {
               Moderner Hub, 100% lokal &amp; werbefrei
             </h3>
             <p className="mt-1 text-sm text-slate-300">
-              Dynamische Reihenfolge nach Startzeit und Status. Nichts verlässt dein Gerät.
+              Dynamische Reihenfolge nach Startzeit und Status. Nichts verlässt
+              dein Gerät.
             </p>
             <div className="mt-4 space-y-3">
               {agenda.map((entry) => (
@@ -372,7 +414,9 @@ export default async function InboxPage() {
                   className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-900/60 px-3 py-2"
                 >
                   <div>
-                    <p className="text-sm font-semibold text-white">{entry.title}</p>
+                    <p className="text-sm font-semibold text-white">
+                      {entry.title}
+                    </p>
                     <p className="text-xs text-slate-400">
                       {formatShortDate(entry.time)} · {entry.project}
                     </p>
@@ -410,7 +454,9 @@ export default async function InboxPage() {
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-white">{task.title}</p>
+                    <p className="text-sm font-semibold text-white">
+                      {task.title}
+                    </p>
                     <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-400">
                       <span
                         className="rounded-full border px-2 py-0.5"
@@ -425,13 +471,19 @@ export default async function InboxPage() {
                         {task.estimateMin}m
                       </span>
                       <span className="rounded-full bg-slate-800/70 px-2 py-0.5 text-white">
-                        {task.dueAt ? `Fällig ${formatShortDate(task.dueAt)}` : "Keine Deadline"}
+                        {task.dueAt
+                          ? `Fällig ${formatShortDate(task.dueAt)}`
+                          : "Keine Deadline"}
                       </span>
                     </div>
                   </div>
                   <form action={setTaskStatusAction}>
                     <input type="hidden" name="taskId" value={task.id} />
-                    <input type="hidden" name="status" value={TaskStatus.ACTIVE} />
+                    <input
+                      type="hidden"
+                      name="status"
+                      value={TaskStatus.ACTIVE}
+                    />
                     <button className="rounded-xl border border-emerald-500/60 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-emerald-200 transition hover:border-emerald-400">
                       In Fokus übernehmen
                     </button>
@@ -448,7 +500,7 @@ export default async function InboxPage() {
                         >
                           {tag.tag.name}
                         </span>
-                      ) : null,
+                      ) : null
                     )}
                   </div>
                 ) : null}
@@ -513,7 +565,8 @@ export default async function InboxPage() {
               </button>
             </div>
             <p className="text-xs text-slate-400">
-              Listen-Preset passt Priorität &amp; Aufwand automatisch an. Alle Einträge bleiben lokal, bis sie synchronisiert werden.
+              Listen-Preset passt Priorität &amp; Aufwand automatisch an. Alle
+              Einträge bleiben lokal, bis sie synchronisiert werden.
             </p>
           </form>
           <div className="mt-5 space-y-2">
@@ -523,21 +576,33 @@ export default async function InboxPage() {
                 className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-900/60 px-3 py-2"
               >
                 <div>
-                  <p className="text-sm font-semibold text-white">{task.title}</p>
+                  <p className="text-sm font-semibold text-white">
+                    {task.title}
+                  </p>
                   <p className="text-xs text-slate-400">
                     {task.project?.name ?? "Ohne Projekt"} · {task.priority} ·{" "}
-                    {task.dueAt ? formatShortDate(task.dueAt) : "keine Deadline"}
+                    {task.dueAt
+                      ? formatShortDate(task.dueAt)
+                      : "keine Deadline"}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span
                     className="inline-flex h-2.5 w-2.5 rounded-full"
-                    style={{ backgroundColor: hashColorFromString(task.project?.name ?? task.title) }}
+                    style={{
+                      backgroundColor: hashColorFromString(
+                        task.project?.name ?? task.title
+                      ),
+                    }}
                     aria-hidden
                   />
                   <form action={setTaskStatusAction}>
                     <input type="hidden" name="taskId" value={task.id} />
-                    <input type="hidden" name="status" value={TaskStatus.DONE} />
+                    <input
+                      type="hidden"
+                      name="status"
+                      value={TaskStatus.DONE}
+                    />
                     <button className="rounded-xl border border-emerald-500/60 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-emerald-200 transition hover:border-emerald-400">
                       Abhaken
                     </button>
