@@ -10,6 +10,7 @@ ENV NODE_ENV=production
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Generate Prisma client and build the Next.js app, then drop dev deps.
+RUN apt-get update -y && apt-get install -y openssl
 RUN npx prisma generate \
   && npm run build \
   && npm prune --omit=dev
