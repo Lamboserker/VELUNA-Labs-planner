@@ -19,6 +19,7 @@ import FullCalendarMonth, {
 } from "../../../components/FullCalendarMonth";
 import Link from "next/link";
 import GoogleCalendarConnectButton from "@/components/GoogleCalendarConnectButton";
+import { randomUUID } from "crypto";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -212,10 +213,33 @@ export default async function PlanPage({ searchParams }: PlanPageProps) {
   const weekStart = shiftDateByWeeks(baseWeekStart, weekOffset);
   const planningEnd = new Date(weekStart);
   planningEnd.setDate(planningEnd.getDate() + WEEK_LENGTH - 1);
-  const { plans: weeklyPlans } = await replanRange({
-    startDate: toLocalDateKey(weekStart),
-    endDate: toLocalDateKey(planningEnd),
-  });
+  let weeklyPlans: Awaited<ReturnType<typeof replanRange>>["plans"] = [];
+  try {
+    const planResponse = await replanRange({
+      startDate: toLocalDateKey(weekStart),
+      endDate: toLocalDateKey(planningEnd),
+    });
+    weeklyPlans = planResponse.plans;
+  } catch (error) {
+    const errorId = randomUUID();
+    console.error(`PlanPage: failed to generate plans (${errorId})`, error);
+    return (
+      <section className="space-y-4 rounded-3xl border border-slate-800 bg-slate-900/70 p-8 text-center text-white">
+        <p className="text-xs uppercase tracking-[0.35em] text-amber-400">
+          Plan laden fehlgeschlagen
+        </p>
+        <p className="text-sm text-slate-300">
+          Die Planung konnte nicht geladen werden. Bitte versuche es erneut. Fehler-ID: {errorId}
+        </p>
+        <Link
+          href="/app/inbox"
+          className="inline-flex items-center justify-center rounded-full border border-cyan-500/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200"
+        >
+          Zurück zum Eingang
+        </Link>
+      </section>
+    );
+  }
 
   const overviewWeekStart = new Date(weekStart);
   const weekOverviewEnd = new Date(overviewWeekStart);
