@@ -8,11 +8,17 @@ on:
 jobs:
   notify-whatsapp:
     runs-on: ubuntu-latest
+    env:
+      WEBHOOK_URL: ${{ secrets.VELUNA_WEBHOOK_URL || '' }}
+      WEBHOOK_SECRET: ${{ secrets.VELUNA_WEBHOOK_SECRET || '' }}
     steps:
+      - name: Skip when webhook secrets are missing
+        if: env.WEBHOOK_URL == '' || env.WEBHOOK_SECRET == ''
+        run: echo "Skipping WhatsApp notification: VELUNA_WEBHOOK_URL or VELUNA_WEBHOOK_SECRET is not set."
+
       - name: Send commit payload to WhatsApp webhook
+        if: env.WEBHOOK_URL != '' && env.WEBHOOK_SECRET != ''
         env:
-          WEBHOOK_URL: ${{ secrets.VELUNA_WEBHOOK_URL }}
-          WEBHOOK_SECRET: ${{ secrets.VELUNA_WEBHOOK_SECRET }}
           EVENT_PAYLOAD: ${{ toJson(github.event) }}
         run: |
           if [ -z "$WEBHOOK_URL" ] || [ -z "$WEBHOOK_SECRET" ]; then
