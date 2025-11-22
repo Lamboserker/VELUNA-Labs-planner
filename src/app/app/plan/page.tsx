@@ -159,87 +159,89 @@ type PlanPageProps = {
 };
 
 export default async function PlanPage({ searchParams }: PlanPageProps) {
-  const normalizedSearchParams = (await searchParams) ?? {};
-  const rawWeekParam = Array.isArray(normalizedSearchParams.week)
-    ? normalizedSearchParams.week[0]
-    : normalizedSearchParams.week;
-  const parsedWeek = Number(rawWeekParam ?? "0");
-  const weekOffset = Number.isNaN(parsedWeek) ? 0 : parsedWeek;
-
-  let user;
+  const errorId = randomUUID();
   try {
-    user = await ensureCurrentUserRecord();
-  } catch (error) {
-    if ((error as Error).message === "Unauthorized") {
-      redirect("/auth/login?redirect=/app/plan");
-      return null;
+    const normalizedSearchParams = (await searchParams) ?? {};
+    const rawWeekParam = Array.isArray(normalizedSearchParams.week)
+      ? normalizedSearchParams.week[0]
+      : normalizedSearchParams.week;
+    const parsedWeek = Number(rawWeekParam ?? "0");
+    const weekOffset = Number.isNaN(parsedWeek) ? 0 : parsedWeek;
+
+    let user;
+    try {
+      user = await ensureCurrentUserRecord();
+    } catch (error) {
+      if ((error as Error).message === "Unauthorized") {
+        redirect("/auth/login?redirect=/app/plan");
+        return null;
+      }
+      throw error;
     }
-    throw error;
-  }
 
-  if (
-    !user.isPowerUser &&
-    normalizeUserCategories(user.categories).length === 0
-  ) {
-    redirect("/app/onboarding");
-  }
+    if (
+      !user.isPowerUser &&
+      normalizeUserCategories(user.categories).length === 0
+    ) {
+      redirect("/app/onboarding");
+    }
 
-  const activeProject = await resolveActiveProject(user);
-  if (!activeProject) {
-    return (
-      <section className="space-y-6 rounded-3xl border border-slate-800 bg-slate-900/70 p-8 text-center text-white shadow-[0_25px_40px_rgba(15,23,42,0.65)]">
-        <p className="text-xs uppercase tracking-[0.35em] text-slate-400">
-          Kein aktives Projekt
-        </p>
-        <p className="text-sm text-slate-300">
-          Lege zunächst ein Projekt an und setze es als aktiv, um deine Planung
-          zu sehen.
-        </p>
-        <Link
-          href="/app/projects"
-          className="inline-flex items-center justify-center rounded-full border border-cyan-500/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200"
-        >
-          Zu den Projekten
-        </Link>
-      </section>
-    );
-  }
+    const activeProject = await resolveActiveProject(user);
+    if (!activeProject) {
+      return (
+        <section className="space-y-6 rounded-3xl border border-slate-800 bg-slate-900/70 p-8 text-center text-white shadow-[0_25px_40px_rgba(15,23,42,0.65)]">
+          <p className="text-xs uppercase tracking-[0.35em] text-slate-400">
+            Kein aktives Projekt
+          </p>
+          <p className="text-sm text-slate-300">
+            Lege zunächst ein Projekt an und setze es als aktiv, um deine Planung
+            zu sehen.
+          </p>
+          <Link
+            href="/app/projects"
+            className="inline-flex items-center justify-center rounded-full border border-cyan-500/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200"
+          >
+            Zu den Projekten
+          </Link>
+        </section>
+      );
+    }
 
-  const germanNow = getGermanyNow();
-  const today = new Date(germanNow);
-  today.setHours(0, 0, 0, 0);
-  const dateKey = toLocalDateKey(today);
-  const baseWeekStart = alignToWeekStart(today);
-  const weekStart = shiftDateByWeeks(baseWeekStart, weekOffset);
-  const planningEnd = new Date(weekStart);
-  planningEnd.setDate(planningEnd.getDate() + WEEK_LENGTH - 1);
-  let weeklyPlans: Awaited<ReturnType<typeof replanRange>>["plans"] = [];
-  try {
-    const planResponse = await replanRange({
-      startDate: toLocalDateKey(weekStart),
-      endDate: toLocalDateKey(planningEnd),
-    });
-    weeklyPlans = planResponse.plans;
-  } catch (error) {
-    const errorId = randomUUID();
-    console.error(`PlanPage: failed to generate plans (${errorId})`, error);
-    return (
-      <section className="space-y-4 rounded-3xl border border-slate-800 bg-slate-900/70 p-8 text-center text-white">
-        <p className="text-xs uppercase tracking-[0.35em] text-amber-400">
-          Plan laden fehlgeschlagen
-        </p>
-        <p className="text-sm text-slate-300">
-          Die Planung konnte nicht geladen werden. Bitte versuche es erneut. Fehler-ID: {errorId}
-        </p>
-        <Link
-          href="/app/inbox"
-          className="inline-flex items-center justify-center rounded-full border border-cyan-500/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200"
-        >
-          Zurück zum Eingang
-        </Link>
-      </section>
-    );
-  }
+    const germanNow = getGermanyNow();
+    const today = new Date(germanNow);
+    today.setHours(0, 0, 0, 0);
+    const dateKey = toLocalDateKey(today);
+    const baseWeekStart = alignToWeekStart(today);
+    const weekStart = shiftDateByWeeks(baseWeekStart, weekOffset);
+    const planningEnd = new Date(weekStart);
+    planningEnd.setDate(planningEnd.getDate() + WEEK_LENGTH - 1);
+    let weeklyPlans: Awaited<ReturnType<typeof replanRange>>["plans"] = [];
+    try {
+      const planResponse = await replanRange({
+        startDate: toLocalDateKey(weekStart),
+        endDate: toLocalDateKey(planningEnd),
+      });
+      weeklyPlans = planResponse.plans;
+    } catch (error) {
+      const planErrorId = randomUUID();
+      console.error(`PlanPage: failed to generate plans (${planErrorId})`, error);
+      return (
+        <section className="space-y-4 rounded-3xl border border-slate-800 bg-slate-900/70 p-8 text-center text-white">
+          <p className="text-xs uppercase tracking-[0.35em] text-amber-400">
+            Plan laden fehlgeschlagen
+          </p>
+          <p className="text-sm text-slate-300">
+            Die Planung konnte nicht geladen werden. Bitte versuche es erneut. Fehler-ID: {planErrorId}
+          </p>
+          <Link
+            href="/app/inbox"
+            className="inline-flex items-center justify-center rounded-full border border-cyan-500/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200"
+          >
+            Zurück zum Eingang
+          </Link>
+        </section>
+      );
+    }
 
   const overviewWeekStart = new Date(weekStart);
   const weekOverviewEnd = new Date(overviewWeekStart);
@@ -865,4 +867,27 @@ export default async function PlanPage({ searchParams }: PlanPageProps) {
       </div>
     </section>
   );
+  } catch (error) {
+    const err = error as Error & { digest?: string };
+    if (typeof err?.digest === "string" && err.digest.includes("NEXT_REDIRECT")) {
+      throw err;
+    }
+    console.error(`PlanPage render failed (${errorId})`, error);
+    return (
+      <section className="space-y-4 rounded-3xl border border-slate-800 bg-slate-900/70 p-8 text-center text-white">
+        <p className="text-xs uppercase tracking-[0.35em] text-amber-400">
+          Plan laden fehlgeschlagen
+        </p>
+        <p className="text-sm text-slate-300">
+          Die Planung konnte nicht geladen werden. Fehler-ID: {errorId}
+        </p>
+        <Link
+          href="/app/inbox"
+          className="inline-flex items-center justify-center rounded-full border border-cyan-500/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200"
+        >
+          Zurück zum Eingang
+        </Link>
+      </section>
+    );
+  }
 }
