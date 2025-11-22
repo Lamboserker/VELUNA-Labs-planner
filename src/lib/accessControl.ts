@@ -60,7 +60,14 @@ export const buildTaskVisibilityWhere = (
   activeProjectId?: string
 ): Prisma.TaskWhereInput => {
   if (isPowerUser(user)) {
-    return activeProjectId ? { projectId: activeProjectId } : {};
+    return activeProjectId
+      ? {
+          OR: [
+            { projectId: activeProjectId },
+            { projectId: null, userId: user.id },
+          ],
+        }
+      : {};
   }
   const categories = normalizeUserCategories(user.categories);
   const categoryFilter: Prisma.TaskWhereInput = {
@@ -73,7 +80,16 @@ export const buildTaskVisibilityWhere = (
 
   if (activeProjectId) {
     return {
-      AND: [{ projectId: activeProjectId }, categoryFilter],
+      AND: [
+        {
+          OR: [
+            { projectId: activeProjectId },
+            // Always allow the viewer's own projektlose (Inbox) Tasks.
+            { projectId: null, userId: user.id },
+          ],
+        },
+        categoryFilter,
+      ],
     };
   }
 
