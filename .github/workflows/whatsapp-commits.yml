@@ -1,0 +1,27 @@
+name: WhatsApp Commit Notifications
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  notify-whatsapp:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send commit payload to WhatsApp webhook
+        env:
+          WEBHOOK_URL: ${{ secrets.VELUNA_WEBHOOK_URL }}
+          WEBHOOK_SECRET: ${{ secrets.VELUNA_WEBHOOK_SECRET }}
+          EVENT_PAYLOAD: ${{ toJson(github.event) }}
+        run: |
+          if [ -z "$WEBHOOK_URL" ] || [ -z "$WEBHOOK_SECRET" ]; then
+            echo "Webhook secrets missing"; exit 1
+          fi
+
+          printf '%s' "$EVENT_PAYLOAD" > payload.json
+
+          curl -X POST "$WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -H "x-veluna-signature: $WEBHOOK_SECRET" \
+            -d @payload.json
