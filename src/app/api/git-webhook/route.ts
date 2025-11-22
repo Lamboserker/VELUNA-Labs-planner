@@ -15,21 +15,6 @@ type GitWebhookPayload = {
   commits?: WebhookCommit[];
 };
 
-const webhookSecret = process.env.GIT_WEBHOOK_SECRET;
-const devTarget = process.env.WABA_DEV_TARGET;
-
-const missingRouteVars = [
-  !webhookSecret && 'GIT_WEBHOOK_SECRET',
-  !devTarget && 'WABA_DEV_TARGET',
-].filter(Boolean);
-
-if (missingRouteVars.length > 0) {
-  throw new Error(`Missing Git webhook env vars: ${missingRouteVars.join(', ')}`);
-}
-
-const resolvedDevTarget = devTarget as string;
-const resolvedWebhookSecret = webhookSecret as string;
-
 const normalizeBranch = (payload: GitWebhookPayload) => {
   if (payload.branch) return payload.branch;
   if (payload.ref?.startsWith('refs/heads/')) return payload.ref.replace('refs/heads/', '');
@@ -59,6 +44,25 @@ const formatCommits = (commits: WebhookCommit[]) => {
 };
 
 export async function POST(req: NextRequest) {
+  const webhookSecret = process.env.GIT_WEBHOOK_SECRET;
+  const devTarget = process.env.WABA_DEV_TARGET;
+
+  const missingRouteVars = [
+    !webhookSecret && 'GIT_WEBHOOK_SECRET',
+    !devTarget && 'WABA_DEV_TARGET',
+  ].filter(Boolean);
+
+  if (missingRouteVars.length > 0) {
+    console.warn('Git webhook env vars missing', { missingRouteVars });
+    return NextResponse.json(
+      { error: `Missing Git webhook env vars: ${missingRouteVars.join(', ')}` },
+      { status: 500 },
+    );
+  }
+
+  const resolvedDevTarget = devTarget as string;
+  const resolvedWebhookSecret = webhookSecret as string;
+
   const signature = req.headers.get('x-veluna-signature')?.trim();
   if (!signature || signature !== resolvedWebhookSecret) {
     console.warn('Git webhook rejected due to invalid signature');

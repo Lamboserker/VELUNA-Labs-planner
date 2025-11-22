@@ -1,21 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendWhatsAppTextMessage } from '@/lib/whatsappClient';
 
-const testRecipient = process.env.WABA_TEST_RECIPIENT;
-
-if (!testRecipient) {
-  throw new Error('Missing WABA_TEST_RECIPIENT');
-}
-const resolvedTestRecipient = testRecipient;
-
 export async function GET(_req: NextRequest) {
+  const testRecipient = process.env.WABA_TEST_RECIPIENT;
+
+  if (!testRecipient) {
+    return NextResponse.json(
+      { error: 'Missing WABA_TEST_RECIPIENT' },
+      { status: 500 },
+    );
+  }
+
   try {
     const message = `WhatsApp Test aus dem Planner (${new Date().toISOString()})`;
-    const result = await sendWhatsAppTextMessage(resolvedTestRecipient, message);
+    const result = await sendWhatsAppTextMessage(testRecipient, message);
 
     return NextResponse.json({
       delivered: true,
-      recipient: resolvedTestRecipient,
+      recipient: testRecipient,
       result,
     });
   } catch (error) {

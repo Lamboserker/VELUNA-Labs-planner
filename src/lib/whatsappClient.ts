@@ -1,23 +1,27 @@
-const phoneNumberId = process.env.WABA_PHONE_NUMBER_ID;
-const accessToken = process.env.WABA_ACCESS_TOKEN;
-
-const missingBaseVars = [
-  !phoneNumberId && 'WABA_PHONE_NUMBER_ID',
-  !accessToken && 'WABA_ACCESS_TOKEN',
-].filter(Boolean);
-
-if (missingBaseVars.length > 0) {
-  throw new Error(`Missing WhatsApp Cloud API env vars: ${missingBaseVars.join(', ')}`);
-}
-
-const resolvedPhoneNumberId = phoneNumberId as string;
-const resolvedAccessToken = accessToken as string;
-
 type WhatsAppTextPayload = {
   messaging_product: 'whatsapp';
   to: string;
   type: 'text';
   text: { body: string };
+};
+
+const resolveWhatsAppConfig = () => {
+  const phoneNumberId = process.env.WABA_PHONE_NUMBER_ID;
+  const accessToken = process.env.WABA_ACCESS_TOKEN;
+
+  const missingBaseVars = [
+    !phoneNumberId && 'WABA_PHONE_NUMBER_ID',
+    !accessToken && 'WABA_ACCESS_TOKEN',
+  ].filter(Boolean);
+
+  if (missingBaseVars.length > 0) {
+    throw new Error(`Missing WhatsApp Cloud API env vars: ${missingBaseVars.join(', ')}`);
+  }
+
+  return {
+    phoneNumberId: phoneNumberId as string,
+    accessToken: accessToken as string,
+  };
 };
 
 export async function sendWhatsAppTextMessage(to: string, body: string): Promise<unknown> {
@@ -32,13 +36,14 @@ export async function sendWhatsAppTextMessage(to: string, body: string): Promise
     text: { body },
   };
 
-  const url = `https://graph.facebook.com/v21.0/${resolvedPhoneNumberId}/messages`;
+  const { phoneNumberId, accessToken } = resolveWhatsAppConfig();
+  const url = `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`;
 
   try {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${resolvedAccessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
