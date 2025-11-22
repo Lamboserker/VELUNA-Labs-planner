@@ -207,12 +207,19 @@ export default async function PlanPage({ searchParams }: PlanPageProps) {
       );
     }
 
-    const germanNow = getGermanyNow();
+  const germanNow = getGermanyNow();
     const today = new Date(germanNow);
     today.setHours(0, 0, 0, 0);
-    const dateKey = toLocalDateKey(today);
     const baseWeekStart = alignToWeekStart(today);
-    const weekStart = shiftDateByWeeks(baseWeekStart, weekOffset);
+    const isWeekend = today.getDay() === 0 || today.getDay() === 6;
+    const effectiveWeekOffset = weekOffset === 0 && isWeekend ? 1 : weekOffset;
+    const focusDate =
+      weekOffset === 0 && isWeekend
+        ? shiftDateByWeeks(baseWeekStart, 1)
+        : today;
+    focusDate.setHours(0, 0, 0, 0);
+    const dateKey = toLocalDateKey(focusDate);
+    const weekStart = shiftDateByWeeks(baseWeekStart, effectiveWeekOffset);
     const planningEnd = new Date(weekStart);
     planningEnd.setDate(planningEnd.getDate() + WEEK_LENGTH - 1);
     let weeklyPlans: Awaited<ReturnType<typeof replanRange>>["plans"] = [];
@@ -631,7 +638,7 @@ export default async function PlanPage({ searchParams }: PlanPageProps) {
                 FOKUS
               </p>
               <p className="text-2xl font-semibold text-white">
-                {today.toLocaleDateString("de-DE", {
+                {focusDate.toLocaleDateString("de-DE", {
                   weekday: "long",
                   day: "numeric",
                   month: "long",
