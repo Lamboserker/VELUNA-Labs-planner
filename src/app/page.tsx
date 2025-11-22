@@ -6,6 +6,7 @@ import AnalyzeIcon from "@/assets/icons/analyze.png";
 import TaskIcon from "@/assets/icons/task.png";
 import CalendarIcon from "@/assets/icons/calendar.png";
 import ProjectIcon from "@/assets/icons/project.png";
+import Logo from "@/assets/veluna-labs-logo.png";
 
 const metrics = [
   { label: "Geplante Fokuszeit", value: "600m", sub: "für diese Woche" },
@@ -60,11 +61,12 @@ export default function MarketingPage() {
           {/* LOGO */}
           <div className="flex flex-col items-center">
             <Image
-              src="/veluna-labs-logo.png"
+              src={Logo}
               alt="Veluna Labs Logo"
               width={360}
               height={360}
               priority
+              style={{ height: 'auto' }}
               className="drop-shadow-[0_40px_120px_rgba(251,146,60,0.55)]"
             />
 

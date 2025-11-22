@@ -5,6 +5,7 @@ import Image from 'next/image';
 import type { Route } from 'next';
 import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import { usePathname } from 'next/navigation';
+import Logo from '@/assets/veluna-labs-logo.png';
 
 const navItems: Array<{ label: string; href: Route }> = [
   { label: 'Eingang', href: '/app/inbox' },
@@ -33,10 +34,11 @@ export default function AppHeader() {
         <div className="flex items-center gap-3 fixed left-0 top-0 ml-6 mt-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 text-lg font-semibold text-white shadow-[0_10px_30px_rgba(15,23,42,0.6)]">
             <Image
-              src="/veluna-labs-logo.png"
+              src={Logo}
               alt="Veluna Labs Logo"
               width={34}
               height={34}
+              style={{ height: 'auto' }}
             />
           </div>
           <div>

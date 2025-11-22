@@ -20,8 +20,8 @@ export async function ensureCurrentUserRecord() {
     throw new Error('Unauthorized');
   }
 
-  // clerkClient is already a ready-to-use client instance
-  const clerkUser = await clerkClient.users.getUser(authState.userId);
+  const client = await clerkClient();
+  const clerkUser = await client.users.getUser(authState.userId);
   const email = emailFromClerkUser(clerkUser);
   if (!email) {
     throw new Error('Clerk user missing an email address');

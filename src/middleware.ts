@@ -13,5 +13,8 @@ export default clerkMiddleware(async (auth, req) => {
 });
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    // Skip all static assets and public files; protect only application routes.
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.json|sw.js|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|txt|xml|json|js|css)).*)',
+  ],
 };
