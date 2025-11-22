@@ -57,7 +57,7 @@ export default function MarketingPage() {
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 px-4 py-10 text-white sm:px-6 sm:py-12">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-12 sm:gap-16">
         {/* HERO */}
-        <section className="relative flex flex-col items-center gap-6 rounded-3xl bg-gradient-to-br from-slate-950/80 via-slate-900/80 to-indigo-950/80 p-10 text-center shadow-[0_32px_80px_rgba(15,23,42,0.85)] sm:p-12 lg:p-16">
+        <section className="relative flex flex-col items-center gap-6 rounded-3xl bg-gradient-to-br from-slate-950/80 via-slate-900/80 to-indigo-950/80 p-8 text-center shadow-[0_32px_80px_rgba(15,23,42,0.85)] sm:p-12 lg:p-16">
           {/* LOGO */}
           <div className="flex flex-col items-center">
             <Image
@@ -98,7 +98,7 @@ export default function MarketingPage() {
             <Link
               href="/app"
               prefetch={false}
-              className="rounded-full border border-slate-700/80 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-100 transition hover:border-cyan-400 hover:text-cyan-200"
+              className="w-full rounded-full border border-slate-700/80 px-6 py-3 text-center text-sm font-semibold uppercase tracking-[0.2em] text-slate-100 transition hover:border-cyan-400 hover:text-cyan-200 sm:w-auto"
             >
               Produktivitäts-Dashboard ansehen
             </Link>
@@ -107,6 +107,35 @@ export default function MarketingPage() {
           <p className="mt-4 text-xs text-slate-500">
             Keine To-do-Liste mehr. Ein durchgehender Fokusplan.
           </p>
+        </section>
+
+        {/* MOBILE-FIRST METRICS */}
+        <section className="overflow-hidden rounded-3xl bg-slate-950/80 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.8)] sm:p-8">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Status live auf dem Handy</p>
+              <h2 className="text-xl font-semibold text-white sm:text-2xl">Swipebar und kompakt für kleine Screens.</h2>
+              <p className="text-sm text-slate-300 sm:text-base">
+                Wichtige Kennzahlen lassen sich mobil horizontal durchscrollen – ohne Layoutsprung – und stehen auf Desktop in einer Dreier-Gitteransicht bereit.
+              </p>
+            </div>
+            <div className="hidden items-center gap-2 rounded-full border border-slate-800 bg-slate-900/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200 sm:inline-flex">
+              Optimiert für Touch
+            </div>
+          </div>
+
+          <div className="mt-5 flex snap-x gap-4 overflow-x-auto pb-2 sm:grid sm:grid-cols-3 sm:gap-5 sm:overflow-visible sm:pb-0">
+            {metrics.map((metric) => (
+              <div
+                key={metric.label}
+                className="min-w-[220px] snap-start rounded-2xl border border-slate-800/70 bg-gradient-to-br from-slate-900/80 via-slate-950/80 to-slate-900/80 px-5 py-4 shadow-[0_18px_42px_rgba(15,23,42,0.65)] sm:min-w-0"
+              >
+                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.3em] text-slate-400">{metric.label}</p>
+                <p className="mt-2 text-2xl font-semibold text-white sm:text-3xl">{metric.value}</p>
+                <p className="mt-1 text-sm text-slate-300">{metric.sub}</p>
+              </div>
+            ))}
+          </div>
         </section>
 
         {/* HOW IT WORKS */}

@@ -22,7 +22,7 @@ export default function StartPlanButton() {
     <button
       type="button"
       onClick={handleClick}
-      className="rounded-full bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-400 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white shadow-lg transition hover:shadow-2xl"
+      className="inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-400 px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white shadow-lg transition hover:shadow-2xl sm:w-auto sm:px-6"
     >
       Jetzt starten
     </button>
