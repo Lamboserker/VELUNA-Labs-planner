@@ -60,6 +60,125 @@ const articles = [
     category: 'Vertrauen & Sicherheit',
     updated: 'vor 5 Tagen',
   },
+  {
+    title: 'Rollenbasiertes Berechtigungsmodell',
+    summary:
+      'Was Owner, Admins, Projektleiter:innen und Contributors dürfen und wie du Limits sauber trennst.',
+    category: 'Team & Zugriff',
+    updated: 'vor 2 Tagen',
+  },
+  {
+    title: 'Automatisierte Erinnerungen aktivieren',
+    summary:
+      'Nutze Benachrichtigungen für überfällige Tasks, unbestätigte Slots und fehlende Timesheets.',
+    category: 'Produktivität',
+    updated: 'vor 6 Tagen',
+  },
+  {
+    title: 'SAML/SSO für Enterprises',
+    summary:
+      'So bindest du Azure AD, Okta oder Google Workspace über SAML an und definierst SCIM Provisioning.',
+    category: 'Vertrauen & Sicherheit',
+    updated: 'vor 1 Tag',
+  },
+  {
+    title: 'API-Schlüssel ausstellen und revoken',
+    summary:
+      'Erstelle projektbezogene API Keys, setze Ablaufdaten und tracke Nutzung per Audit Trail.',
+    category: 'Verbindungen',
+    updated: 'vor 4 Tagen',
+  },
+  {
+    title: 'Planung mit Kapazitätsgrenzen',
+    summary:
+      'Arbeitsstunden pro Woche hinterlegen, Urlaube berücksichtigen und Konflikte im Kalender erkennen.',
+    category: 'Produktivität',
+    updated: 'vor 3 Tagen',
+  },
+  {
+    title: 'Audit-Logs exportieren',
+    summary:
+      'Lade revisionssichere Logs als CSV/JSON herunter oder sende sie per Webhook an dein SIEM.',
+    category: 'Vertrauen & Sicherheit',
+    updated: 'vor 2 Wochen',
+  },
+  {
+    title: 'Mehrere Währungen in Projekten',
+    summary:
+      'Lege Budgets in EUR, USD oder GBP an und harmonisiere Wechselkurse für Reports.',
+    category: 'Abrechnung',
+    updated: 'vor 8 Tagen',
+  },
+  {
+    title: 'Team-Handover & Verantwortlichkeiten',
+    summary:
+      'Definiere Stellvertretungen, lege Eskalationswege fest und dokumentiere Owner pro Projekt.',
+    category: 'Team & Zugriff',
+    updated: 'vor 5 Tagen',
+  },
+];
+
+const faqs = [
+  {
+    question: 'Wie funktioniert die Suche nach Artikeln?',
+    answer:
+      'Nutze die Schlagwortsuche oben auf der Seite. Wir gleichen Titel, Zusammenfassungen und Kategorien ab und zeigen sofort passende Beiträge.',
+    tag: 'Navigation',
+  },
+  {
+    question: 'Kann ich Support direkt aus dem Help Center kontaktieren?',
+    answer:
+      'Ja. Über den Button "Support anfragen" öffnest du das Kontaktformular. Du kannst außerdem bei jedem Artikel einen neuen Vorgang anstoßen.',
+    tag: 'Support',
+  },
+  {
+    question: 'Wie oft werden Inhalte aktualisiert?',
+    answer:
+      'Produkt- und Sicherheitsartikel werden wöchentlich kuratiert. Bei Releases oder Incidents aktualisieren wir innerhalb von 24 Stunden.',
+    tag: 'Aktualität',
+  },
+  {
+    question: 'Gibt es geführte Onboarding-Guides?',
+    answer:
+      'Ja. Unter "Erste Schritte" findest du Schritt-für-Schritt-Anleitungen für Workspace-Setup, Rollen und erste Projekte.',
+    tag: 'Onboarding',
+  },
+  {
+    question: 'Welche Sprachen unterstützt das Help Center?',
+    answer:
+      'Aktuell pflegen wir Inhalte auf Deutsch und Englisch. Wir erweitern das Angebot je nach Nachfrage um weitere Lokalisierungen.',
+    tag: 'Lokalisierung',
+  },
+  {
+    question: 'Wie melde ich einen Sicherheitsvorfall?',
+    answer:
+      'Nutze den Bereich "Vertrauen & Sicherheit" oder schreibe direkt an security@veluna.labs mit einer kurzen Beschreibung und betroffenen Accounts.',
+    tag: 'Security',
+  },
+  {
+    question: 'Kann ich API-Beispiele testen?',
+    answer:
+      'Ja. In den Artikeln zu API-Keys und Webhooks findest du verlinkte Postman-Collections sowie Beispiel-Requests.',
+    tag: 'API',
+  },
+  {
+    question: 'Wie erhalte ich Updates zu Release Notes?',
+    answer:
+      'Abonniere den Newsletter über "Release Notes abonnieren" oder folge unserem Status-Feed. Beide Kanäle informieren vor Deployments.',
+    tag: 'Produkt',
+  },
+  {
+    question: 'Was passiert, wenn keine Suchtreffer erscheinen?',
+    answer:
+      'Passe deine Begriffe an oder wechsle die Kategorie. Wir zeigen dir außerdem den Link zum Support, damit du direkt nachfragen kannst.',
+    tag: 'Navigation',
+  },
+  {
+    question: 'Kann ich Help-Center-Artikel exportieren?',
+    answer:
+      'Exportiere einzelne Artikel als PDF über die Browser-Druckfunktion. Für Sammelexporte kontaktiere das Team, wir stellen ein Bundle bereit.',
+    tag: 'Dokumentation',
+  },
 ];
 
 const quickResources = [
@@ -202,6 +321,32 @@ export default function HelpCenterClient() {
                 ))}
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="space-y-6 rounded-3xl bg-slate-950/70 p-8 shadow-[0_20px_50px_rgba(2,6,23,0.8)]">
+          <div className="flex flex-col gap-2">
+            <p className="text-xs uppercase tracking-[0.35em] text-slate-500">FAQ</p>
+            <h3 className="text-2xl font-semibold text-white">Häufige Fragen & schnelle Antworten</h3>
+            <p className="text-sm text-slate-300">
+              Eine Sammlung der gängigsten Fragen unserer Teams – fokussiert auf Navigation, Sicherheit, API und Produkt-Updates.
+              So findest du schneller eine Lösung, ohne den Support zu kontaktieren.
+            </p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {faqs.map((item) => (
+              <article
+                key={item.question}
+                className="space-y-2 rounded-2xl border border-slate-800/80 bg-slate-900/50 p-5 shadow-[0_15px_45px_rgba(2,6,23,0.8)]"
+              >
+                <div className="flex items-center justify-between text-xs uppercase tracking-[0.35em] text-slate-500">
+                  <span>{item.tag}</span>
+                  <span>FAQ</span>
+                </div>
+                <h4 className="text-lg font-semibold text-white">{item.question}</h4>
+                <p className="text-sm text-slate-300">{item.answer}</p>
+              </article>
+            ))}
           </div>
         </section>
       </div>
