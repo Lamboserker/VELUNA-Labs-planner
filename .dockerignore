@@ -5,8 +5,6 @@ Dockerfile
 docker-compose.yml
 .git
 .gitignore
-.env
-.env.*
 tests
 playwright-report
 tmp
