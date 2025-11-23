@@ -6,29 +6,63 @@ on:
       - main
 
 jobs:
-  notify-whatsapp:
+  deploy:
     runs-on: ubuntu-latest
-    env:
-      WEBHOOK_URL: ${{ secrets.VELUNA_WEBHOOK_URL || '' }}
-      WEBHOOK_SECRET: ${{ secrets.VELUNA_WEBHOOK_SECRET || '' }}
-    steps:
-      - name: Skip when webhook secrets are missing
-        if: env.WEBHOOK_URL == '' || env.WEBHOOK_SECRET == ''
-        run: |
-          echo "Skipping WhatsApp notification: VELUNA_WEBHOOK_URL or VELUNA_WEBHOOK_SECRET is not set."
 
-      - name: Send commit payload to WhatsApp webhook
-        if: env.WEBHOOK_URL != '' && env.WEBHOOK_SECRET != ''
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /backend/VELUNA-Labs-planner
+            git fetch origin
+            git reset --hard origin/main
+            docker compose down
+            docker compose up -d --build
+
+  notify-whatsapp:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for app to be available
         env:
-          EVENT_PAYLOAD: ${{ toJson(github.event) }}
+          HEALTH_URL: https://veluna-labs-planer.de/api/health
+        run: |
+          echo "Checking if app is up at $HEALTH_URL ..."
+          for i in {1..12}; do
+            if curl -sf "$HEALTH_URL" > /dev/null; then
+              echo "App is up ✅"
+              exit 0
+            fi
+            echo "App not ready yet, retry in 10s... (try $i/12)"
+            sleep 10
+          done
+          echo "App did not become ready in time ❌"
+          exit 1
+
+      - name: Call Veluna-Labs Planner WhatsApp webhook
+        env:
+          WEBHOOK_URL: ${{ secrets.VELUNA_WEBHOOK_URL }}
+          WEBHOOK_SECRET: ${{ secrets.VELUNA_WEBHOOK_SECRET }}
         run: |
           if [ -z "$WEBHOOK_URL" ] || [ -z "$WEBHOOK_SECRET" ]; then
-            echo "Webhook secrets missing"; exit 1
+            echo "WEBHOOK_URL or WEBHOOK_SECRET is not set. ❌"
+            exit 1
           fi
 
-          printf '%s' "$EVENT_PAYLOAD" > payload.json
-
-          curl -X POST "$WEBHOOK_URL" \
+          curl --retry 5 --retry-all-errors \
             -H "Content-Type: application/json" \
             -H "x-veluna-signature: $WEBHOOK_SECRET" \
-            -d @payload.json
+            -d @- "$WEBHOOK_URL" << 'EOF'
+          {
+            "ref": "${{ github.ref }}",
+            "repository": { "full_name": "${{ github.repository }}" },
+            "commits": ${{ toJson(github.event.commits) }}
+          }
+          EOF
