@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import '../styles/globals.css';
 import { ClerkProvider } from '@clerk/nextjs';
 import ModernFooter from '@/components/ModernFooter';
+import MarketingNavbar from '@/components/MarketingNavbar';
 import { clerkPublishableKey } from '@/lib/clerkEnv';
 
 export const metadata = {
@@ -15,6 +16,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <html lang="de" suppressHydrationWarning>
         <body className="bg-slate-950 text-white antialiased safe-bottom">
           <div className="flex min-h-screen flex-col">
+            <MarketingNavbar />
             <div className="flex-1">{children}</div>
             <ModernFooter />
           </div>
