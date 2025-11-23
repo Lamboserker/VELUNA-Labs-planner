@@ -2,15 +2,14 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import type { Route } from 'next';
 import { usePathname } from 'next/navigation';
 import Logo from '@/assets/veluna-labs-logo.png';
 
-const navLinks: { label: string; href: Route }[] = [
-  { label: 'Produkt', href: '/' as Route },
-  { label: 'Help Center', href: '/helpcenter' as Route },
-  { label: 'Kontakt', href: '/kontakt' as Route },
-  { label: 'Sicherheit', href: '/sicherheit' as Route },
+const navLinks = [
+  { label: 'Produkt', href: '/' },
+  { label: 'Help Center', href: '/helpcenter' },
+  { label: 'Kontakt', href: '/kontakt' },
+  { label: 'Sicherheit', href: '/sicherheit' },
 ];
 
 export default function MarketingNavbar() {
