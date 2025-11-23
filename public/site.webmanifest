@@ -1,0 +1,12 @@
+{
+  "name": "Veluna Labs Planer",
+  "short_name": "Planer",
+  "icons": [
+    { "src": "/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/favicon.ico", "sizes": "48x48", "type": "image/x-icon" }
+  ],
+  "theme_color": "#0f172a",
+  "background_color": "#0b1224",
+  "display": "standalone"
+}
