@@ -14,7 +14,8 @@ jobs:
     steps:
       - name: Skip when webhook secrets are missing
         if: env.WEBHOOK_URL == '' || env.WEBHOOK_SECRET == ''
-        run: echo "Skipping WhatsApp notification: VELUNA_WEBHOOK_URL or VELUNA_WEBHOOK_SECRET is not set."
+        run: |
+          echo "Skipping WhatsApp notification: VELUNA_WEBHOOK_URL or VELUNA_WEBHOOK_SECRET is not set."
 
       - name: Send commit payload to WhatsApp webhook
         if: env.WEBHOOK_URL != '' && env.WEBHOOK_SECRET != ''
