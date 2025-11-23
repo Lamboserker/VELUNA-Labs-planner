@@ -31,7 +31,7 @@ export default function AuthPanel() {
   const searchParams = useSearchParams();
   const origin =
     typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
-  const getTargetUrl = (value: string) => new URL(value, origin).toString();
+  const getTargetUrl = useCallback((value: string) => new URL(value, origin).toString(), [origin]);
 
   const isSignInReady = Boolean(signIn && isSignInLoaded);
   const isSignUpReady = Boolean(signUp && isSignUpLoaded);
@@ -100,7 +100,7 @@ export default function AuthPanel() {
         setStatus('idle');
       }
     },
-    [email, isSignInReady, isSignUpReady, mode, searchParams, signIn, signUp]
+    [email, getTargetUrl, isSignInReady, isSignUpReady, mode, origin, searchParams, signIn, signUp]
   );
 
   const handleGoogleSignIn = useCallback(async () => {
@@ -128,7 +128,7 @@ export default function AuthPanel() {
       });
       setStatus('idle');
     }
-  }, [isSignInReady, searchParams, signIn]);
+  }, [getTargetUrl, isSignInReady, origin, searchParams, signIn]);
 
   return (
     <div className="w-full max-w-md space-y-8 rounded-3xl border border-slate-800 bg-slate-900/70 p-8 shadow-[0_35px_60px_rgba(2,6,23,0.65)]">

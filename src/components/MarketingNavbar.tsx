@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import type { Route } from 'next';
 import Logo from '@/assets/veluna-labs-logo.png';
 
 const navLinks = [
@@ -10,7 +11,7 @@ const navLinks = [
   { label: 'Help Center', href: '/helpcenter' },
   { label: 'Kontakt', href: '/kontakt' },
   { label: 'Sicherheit', href: '/sicherheit' },
-];
+] satisfies { label: string; href: Route }[];
 
 export default function MarketingNavbar() {
   const pathname = usePathname();
@@ -47,7 +48,7 @@ export default function MarketingNavbar() {
 
         <div className="flex items-center gap-2 text-[0.7rem] font-semibold uppercase tracking-[0.28em] text-slate-200">
           <Link
-            href="/auth/login"
+            href={'/auth/login' as Route}
             className="rounded-full border border-slate-800/80 px-4 py-2 transition hover:border-cyan-400 hover:text-cyan-200"
           >
             Login
